@@ -7,4 +7,5 @@ type User struct{
 	Username string `gorm:"unique"`
 	Role     string `binding:"required"` //admin,user
 	Password string `binding:"required"`
+	
 }

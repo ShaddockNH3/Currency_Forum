@@ -18,9 +18,10 @@ func HashPassword(pwd string) (string,error){
 /*
 生成 JWT
 */
-func GenrateJWT(username string) (string,error){
+func GenrateJWT(username,role string) (string,error){
 	token:=jwt.NewWithClaims(jwt.SigningMethodHS256,jwt.MapClaims{
 		"username":username,
+		"role":role,
 		"exp":time.Now().Add(time.Hour*72).Unix(),
 	})
 
@@ -36,7 +37,7 @@ func CheckPassword(password,hashedPwd string) bool{
 	return err==nil
 }
 
-func ParseJWT(tokenString string) (string,error){
+func ParseJWT(tokenString string) (string,string,error){
 	if len(tokenString)>7&&tokenString[:7]=="Bearer "{
 		tokenString=tokenString[7:]
 	}
@@ -49,16 +50,20 @@ func ParseJWT(tokenString string) (string,error){
 	})
 
 	if err!=nil{
-		return "",err
+		return "", "",err
 	}
 
 	if claims,ok:=token.Claims.(jwt.MapClaims);ok && token.Valid{
 		username,ok:=claims["username"].(string)
 		if !ok{
-			return "",errors.New("username claim is not a string")
+			return "", "",errors.New("username claim is not a string")
 		}
-		return username,nil
+		role,ok:=claims["role"].(string)
+		if !ok{
+			return "", "",errors.New("role claim is not a string")
+		}
+		return username,role,nil
 	}
 
-	return "",err
+	return "", "",err
 }

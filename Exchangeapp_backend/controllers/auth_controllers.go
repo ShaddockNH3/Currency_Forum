@@ -40,7 +40,7 @@ func Register(ctx *gin.Context) {
 
 	user.Password = hashedPwd
 
-	token, err := utils.GenrateJWT(user.Username)
+	token, err := utils.GenrateJWT(user.Username, user.Role)
 
 	if err != nil {
 		log.Printf("错误点 B: 生成 JWT 失败: %v", err)
@@ -111,7 +111,7 @@ func Login(ctx *gin.Context) {
 
 	log.Println("3. 密码验证成功, 准备生成 JWT")
 
-	token, err := utils.GenrateJWT(user.Username)
+	token, err := utils.GenrateJWT(user.Username, user.Role)
 
 	if err != nil {
 		log.Printf("错误点 D: 生成 JWT 失败: %v", err)
