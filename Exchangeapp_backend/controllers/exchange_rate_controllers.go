@@ -33,9 +33,9 @@ func CreateExchangeRate(ctx *gin.Context) {
 
 	exchangeRate.Date = time.Now()
 
-	_, role, err := utils.ParseJWT(ctx.GetHeader("Authorization"))
-	if err != nil {
-		log.Printf("错误点 B: 解析 JWT 失败: %v", err)
+	role, exists := ctx.Get("role")
+	if !exists{
+		log.Printf("错误点 B: 获取角色失败")
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
 		return
 	}
@@ -96,10 +96,9 @@ func DeleteExchangeRateByID(ctx *gin.Context) {
 
 	result := global.Db.Where("id = ?", id).Delete(&models.ExchangeRate{})
 
-	_, role, err := utils.ParseJWT(ctx.GetHeader("Authorization"))
-
-	if err != nil {
-		log.Printf("错误点 A: 解析 JWT 失败: %v", err)
+	role, exists := ctx.Get("role")
+	if !exists {
+		log.Printf("错误点 B: 获取角色失败")
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
 		return
 	}

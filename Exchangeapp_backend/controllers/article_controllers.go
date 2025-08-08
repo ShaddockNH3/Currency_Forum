@@ -5,7 +5,6 @@ import (
 	"errors"
 	"exchangeapp/global"
 	"exchangeapp/models"
-	"exchangeapp/utils"
 	"log"
 	"net/http"
 	"time"
@@ -28,14 +27,14 @@ func CreateArticle(ctx *gin.Context) {
 		return
 	}
 
-	username,_,err:=utils.ParseJWT(ctx.GetHeader("Authorization"))
-	if err!=nil{
-		log.Printf("错误点 B: 解析 JWT 失败: %v", err)
+	username, exists := ctx.Get("username")
+	if !exists {
+		log.Printf("错误点 B: 获取用户名失败")
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
 		return
 	}
 
-	article.Author = username
+	article.Author = username.(string)
 
 	if err := global.Db.AutoMigrate(&article); err != nil {
 		log.Printf("错误点 C: 迁移数据库失败: %v", err)
@@ -153,15 +152,22 @@ func DeleteArticleByID(ctx *gin.Context) {
 	var article models.Article
 	result := global.Db.Where("id = ?", id).First(&article)
 
-	username,role,err:=utils.ParseJWT(ctx.GetHeader("Authorization"))
-	if err!=nil{
-		log.Printf("错误点 A: 解析 JWT 失败: %v", err)
+	username, exists := ctx.Get("username")
+	if !exists {
+		log.Printf("错误点 A: 获取用户名失败")
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+		return
+	}
+	
+	role, exists := ctx.Get("role")
+	if !exists {
+		log.Printf("错误点 B: 获取角色失败")
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
 		return
 	}
 
-	if role != "admin" && article.Author != username {
-		log.Printf("错误点 B: 用户没有权限删除文章: %v", err)
+	if role != "admin" && article.Author != username.(string) {
+		log.Printf("错误点 B: 用户没有权限删除文章")
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "没有权限删除文章"})
 		return
 	}
