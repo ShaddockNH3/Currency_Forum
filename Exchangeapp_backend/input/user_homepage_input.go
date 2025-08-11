@@ -1,4 +1,4 @@
-package models
+package input
 
 type UpdateProfileInput struct {
     Signature    string `json:"signature"`

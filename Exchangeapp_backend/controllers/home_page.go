@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"errors"
+	"exchangeapp/dto"
 	"exchangeapp/global"
+	"exchangeapp/input"
 	"exchangeapp/models"
 	"log"
 	"net/http"
@@ -31,7 +33,7 @@ func GetHomePage(ctx *gin.Context) {
 
 	log.Printf("用户 '%s' 的信息获取成功！", username)
 
-	response:=models.UserResponse{
+	response:=dto.UserResponse{
 		ID:           user.ID,
         Username:     user.Username,
         Role:         user.Role,
@@ -55,8 +57,8 @@ func UpdateUserProfile(ctx *gin.Context) {
 
     log.Printf("用户名 %s 正在请求更新资料...", username)
 
-    var input models.UpdateProfileInput
-    if err := ctx.ShouldBindJSON(&input); err != nil {
+    var profileinput input.UpdateProfileInput
+    if err := ctx.ShouldBindJSON(&profileinput); err != nil {
         ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
@@ -70,7 +72,7 @@ func UpdateUserProfile(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "数据库错误"})
 		}
 	}
-    result := global.Db.Model(&user).Where("username = ?", username).Updates(input)
+    result := global.Db.Model(&user).Where("username = ?", username).Updates(profileinput)
 
     if result.Error != nil {
         log.Printf("更新用户资料失败, 用户名 %s: %v", username, result.Error)
