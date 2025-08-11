@@ -4,7 +4,6 @@ import (
 	"errors"
 	"exchangeapp/global"
 	"exchangeapp/models"
-	"exchangeapp/utils"
 	"log"
 	"net/http"
 	"time"
@@ -41,7 +40,7 @@ func CreateExchangeRate(ctx *gin.Context) {
 	}
 
 	if role != "admin" {
-		log.Printf("错误点 C: 用户没有权限创建汇率: %v", err)
+		log.Printf("错误点 C: 用户没有权限创建汇率")
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "没有权限创建汇率"})
 		return
 	}
@@ -104,7 +103,7 @@ func DeleteExchangeRateByID(ctx *gin.Context) {
 	}
 
 	if role != "admin" {
-		log.Printf("错误点 B: 用户没有权限删除文章: %v", err)
+		log.Printf("错误点 B: 用户没有权限删除汇率")
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "没有权限删除文章"})
 		return
 	}

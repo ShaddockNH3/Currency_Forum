@@ -22,9 +22,10 @@ func AuthMiddleware() gin.HandlerFunc{
 			ctx.Abort()
 			return
 		}
-		
+
 		ctx.Set("username",username)
 		ctx.Set("role",role)
+
 		ctx.Next()
 	}
 }

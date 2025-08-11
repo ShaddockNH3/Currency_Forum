@@ -23,17 +23,18 @@ func SetupRouter() *gin.Engine {
 	auth := r.Group("/api/auth")
 	{
 		auth.POST("/login", controllers.Login)
-
 		auth.POST("/register", controllers.Register)
 	}
 
 	api := r.Group("/api")
+
 	api.GET("/exchangeRates", controllers.GetExchangeRate)
-	api.DELETE("/exchangeRates/:id", controllers.DeleteExchangeRateByID)
 
 	api.Use(middlewares.AuthMiddleware())
 	{
 		api.POST("/exchangeRates", controllers.CreateExchangeRate)
+		api.DELETE("/exchangeRates/:id", controllers.DeleteExchangeRateByID)
+
 		api.POST("/articles", controllers.CreateArticle)
 		api.GET("/articles", controllers.GetArticles)
 		api.GET("/articles/:id", controllers.GetArticlesByID)
@@ -42,8 +43,8 @@ func SetupRouter() *gin.Engine {
 		api.POST("/articles/:id/like", controllers.LikeArticle)
 		api.GET("/articles/:id/like", controllers.GetArticleLikes)
 
-		//api.GET("/home", controllers.GetHome)
-		//api.POST("/home", controllers.CreateHome)
+		api.GET("/users/:username", controllers.GetHomePage)
+		api.PUT("/users/:username", controllers.UpdateUserProfile)
 		
 	}
 
