@@ -27,42 +27,48 @@
 本项目后端采用分层清晰的架构模式，将不同职责的代码解耦到独立的包中，以提高代码的可维护性和可扩展性。
 
 ```
-├── config/
-│   ├── config.go
-│   ├── config.yml
-│   ├── db.go
-│   └── redis.go
-├── controllers/
-│   ├── article_controllers.go
-│   ├── auth_controllers.go
-│   ├── exchange_rate_controllers.go
-│   ├── homepage_controller.go
-│   ├── like_controllers.go
-│   └── wallet_controller.go
-├── dto/
-│   ├── article_dto.go
-│   ├── homepage_dto.go
-│   └── wallet_dto.go
-├── global/
-│   └── global.go
-├── input/
-│   ├── article_input.go
-│   └── homepage_input.go
-├── middlewares/
-│   └── auth_middleware.go
-├── models/
-│   ├── article.go
-│   ├── exchange_rate.go
-│   ├── user.go
-│   └── wallet.go
-├── router/
-│   └── router.go
-├── utils/
-│   ├── dto_converter.go
-│   └── utils.go
-├── go.mod
-├── go.sum
-└── main.go
+├── 📁 config/
+│   ├── 🐹 config.go
+│   ├── ⚙️ config.yml
+│   ├── 🐹 db.go
+│   └── 🐹 redis.go
+├── 📁 controllers/
+│   ├── 📁 wallet_controllers/
+│   │   ├── 🐹 bills.go
+│   │   ├── 🐹 exchange.go
+│   │   ├── 🐹 trade.go
+│   │   └── 🐹 wallet.go
+│   ├── 🐹 article_controllers.go
+│   ├── 🐹 auth_controllers.go
+│   ├── 🐹 exchange_rate_controllers.go
+│   ├── 🐹 homepage_controller.go
+│   └── 🐹 like_controllers.go
+├── 📁 dto/
+│   ├── 🐹 article_dto.go
+│   ├── 🐹 homepage_dto.go
+│   └── 🐹 wallet_dto.go
+├── 📁 global/
+│   └── 🐹 global.go
+├── 📁 input/
+│   ├── 🐹 article_input.go
+│   ├── 🐹 homepage_input.go
+│   └── 🐹 wallet_input.go
+├── 📁 middlewares/
+│   └── 🐹 auth_middleware.go
+├── 📁 models/
+│   ├── 🐹 article.go
+│   ├── 🐹 exchange_rate.go
+│   ├── 🐹 user.go
+│   └── 🐹 wallet.go
+├── 📁 router/
+│   └── 🐹 router.go
+├── 📁 utils/
+│   ├── 🐹 dto_converter.go
+│   ├── 🐹 user_utils.go
+│   └── 🐹 utils.go
+├── 🐹 go.mod
+├── 🐹 go.sum
+└── 🐹 main.go
 ```
 
 ## 🛠️ 技术栈 (Technology Stack)
@@ -97,8 +103,8 @@
    - [x] 为用户个人主页的文章列表，实现后端分页(Pagination) 功能。
  - [x] 性能优化：为所有列表实现分页
    - [x] 为公共的文章列表 (GET /articles) 也实现分页功能。
-   
-   第二阶段：核心“货币兑换”模块 (Phase 2: Core "Currency Exchange" Module)
+
+第二阶段：核心“货币兑换”模块 (Phase 2: Core "Currency Exchange" Module)
 这是我们应用的灵魂！我们要为用户构建一个完整、安全的模拟货币兑换系统。
  * [x] 用户资产系统：创建“钱包”
    * [x] 设计并创建用户 “钱包/余额” (Wallet/Balance) 的数据模型，用于存储每个用户拥有的不同种类货币的数量。
