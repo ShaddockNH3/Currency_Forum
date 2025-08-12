@@ -45,7 +45,7 @@ func SetupRouter() *gin.Engine {
 
 		api.GET("/users/:username", controllers.GetHomePage)
 		api.PUT("/users/:username", controllers.UpdateUserProfile)
-		
+
 	}
 
 	return r

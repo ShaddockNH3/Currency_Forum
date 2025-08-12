@@ -16,8 +16,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUpdated, onBeforeUpdate, onBeforeMount } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import axios from "../axios";
+import { useAuthStore } from '../store/auth';
+import { ElMessage } from 'element-plus';
 import type { Article, Like } from "../types/Article";
 
 const article = ref<Article | null>(null);

@@ -33,7 +33,7 @@ func CreateExchangeRate(ctx *gin.Context) {
 	exchangeRate.Date = time.Now()
 
 	role, exists := ctx.Get("role")
-	if !exists{
+	if !exists {
 		log.Printf("错误点 B: 获取角色失败")
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
 		return
@@ -45,14 +45,10 @@ func CreateExchangeRate(ctx *gin.Context) {
 		return
 	}
 
-	if err := global.Db.AutoMigrate(&exchangeRate); err != nil {
-		log.Printf("错误点 D: 迁移数据库失败: %v", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	// 注意：数据库迁移已在应用启动时完成，此处不再需要
 
 	if err := global.Db.Create(&exchangeRate).Error; err != nil {
-		log.Printf("错误点 E: 创建汇率失败: %v", err)
+		log.Printf("错误点 D: 创建汇率失败: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

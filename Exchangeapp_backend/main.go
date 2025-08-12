@@ -17,7 +17,12 @@ import (
 func main() {
 	config.InitConfig()
 
-	global.Db.AutoMigrate(&models.User{}, &models.Article{}, &models.ExchangeRate{})
+	// 数据库迁移：确保所有表结构在应用启动时就准备好
+	log.Println("开始数据库迁移...")
+	if err := global.Db.AutoMigrate(&models.User{}, &models.Article{}, &models.ExchangeRate{}); err != nil {
+		log.Fatalf("数据库迁移失败: %v", err)
+	}
+	log.Println("数据库迁移完成")
 
 	r := router.SetupRouter()
 

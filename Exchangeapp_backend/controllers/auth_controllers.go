@@ -40,31 +40,27 @@ func Register(ctx *gin.Context) {
 
 	user.Password = hashedPwd
 
-	token, err := utils.GenrateJWT(user.Username, user.Role)
+	log.Println("3. 密码哈希成功, 准备创建用户")
 
-	if err != nil {
-		log.Printf("错误点 B: 生成 JWT 失败: %v", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	log.Println("3. JWT 生成成功, 准备操作数据库")
-
-	if err := global.Db.AutoMigrate(&user); err != nil {
-		log.Printf("错误点 C: 数据库迁移失败: %v", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	log.Println("4. 数据库迁移成功, 准备创建用户")
+	// 注意：数据库迁移已在应用启动时完成，此处不再需要
 
 	if err := global.Db.Create(&user).Error; err != nil {
-		log.Printf("错误点 D: 创建用户失败: %v", err)
+		log.Printf("错误点 C: 创建用户失败: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Println("5. 用户创建成功！准备返回 Token")
+	log.Println("4. 用户创建成功！准备生成 JWT")
+
+	// 在用户创建成功后生成 JWT，此时 user.ID 已经有值
+	token, err := utils.GenrateJWT(user.Username, user.Role, int(user.ID))
+	if err != nil {
+		log.Printf("错误点 D: 生成 JWT 失败: %v", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Println("5. JWT 生成成功！准备返回 Token")
 
 	ctx.JSON(http.StatusOK, gin.H{"token": token})
 }
@@ -111,7 +107,7 @@ func Login(ctx *gin.Context) {
 
 	log.Println("3. 密码验证成功, 准备生成 JWT")
 
-	token, err := utils.GenrateJWT(user.Username, user.Role)
+	token, err := utils.GenrateJWT(user.Username, user.Role, int(user.ID))
 
 	if err != nil {
 		log.Printf("错误点 D: 生成 JWT 失败: %v", err)
