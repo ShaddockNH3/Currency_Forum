@@ -18,11 +18,16 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		log.Printf("收到认证请求，Token: %s", token[:min(len(token), 20)]+"...")
+		log.Printf("收到认证请求,完整Token: %s", token)
+		log.Printf("Token长度: %d", len(token))
+		if len(token) > 20 {
+			log.Printf("Token前20字符: %s...", token[:20])
+		}
 
 		username, role, id, err := utils.ParseJWT(token)
 		if err != nil {
 			log.Printf("认证失败: JWT 解析错误: %v", err)
+			log.Printf("Token内容: %s", token)
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Token"})
 			ctx.Abort()
 			return
@@ -36,11 +41,4 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		ctx.Next()
 	}
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

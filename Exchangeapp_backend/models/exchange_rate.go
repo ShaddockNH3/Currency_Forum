@@ -4,8 +4,9 @@ import "time"
 
 type ExchangeRate struct {
 	ID           uint      `gorm:"primaryKey" json:"id"`
-	FromCurrency string    `json:"from_currency" binding:"required"` 
-	ToCurrency   string    `json:"to_currency" binding:"required"`
+	FromCurrency string    `json:"fromCurrency" binding:"required"`
+	ToCurrency   string    `json:"toCurrency" binding:"required"`
 	Rate         float64   `json:"rate" binding:"required"`
+	Description  string    `json:"description"`
 	Date         time.Time `json:"date"`
 }

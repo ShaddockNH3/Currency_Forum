@@ -28,7 +28,8 @@ func GenrateJWT(username, role string, id int) (string, error) {
 	})
 
 	signedToken, err := token.SignedString([]byte("secret"))
-	return "Bearer " + signedToken, err
+	// 不自动添加Bearer前缀，让前端自己添加
+	return signedToken, err
 }
 
 /*

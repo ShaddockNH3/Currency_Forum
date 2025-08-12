@@ -23,26 +23,6 @@ const (
 	cacheTTL = 10 * time.Minute
 )
 
-// getUserInfo 从上下文中获取用户信息
-func getUserInfo(ctx *gin.Context) (userID int, username string, role string, err error) {
-	id, exists := ctx.Get("id")
-	if !exists {
-		return 0, "", "", errors.New("获取用户ID失败")
-	}
-
-	usernameVal, exists := ctx.Get("username")
-	if !exists {
-		return 0, "", "", errors.New("获取用户名失败")
-	}
-
-	roleVal, exists := ctx.Get("role")
-	if !exists {
-		return 0, "", "", errors.New("获取用户角色失败")
-	}
-
-	return id.(int), usernameVal.(string), roleVal.(string), nil
-}
-
 func CreateArticle(ctx *gin.Context) {
 
 	var articleInput input.ArticleInput
@@ -63,7 +43,7 @@ func CreateArticle(ctx *gin.Context) {
 	}
 
 	// 获取用户信息
-	userID, username, _, err := getUserInfo(ctx)
+	userID, username, _, err := utils.GetUserInfo(ctx)
 	if err != nil {
 		log.Printf("错误点 B: %v", err)
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
@@ -255,6 +235,78 @@ func GetArticlesByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, article)
 }
 
+func UpdateArticleByID(ctx *gin.Context) {
+	articleid := ctx.Param("id")
+
+	// 验证文章ID参数
+	if articleid == "" {
+		log.Printf("错误点 A: 文章ID参数为空")
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "文章ID不能为空"})
+		return
+	}
+
+	var input struct {
+		Title   string `json:"title" binding:"required"`
+		Preview string `json:"preview" binding:"required"`
+		Content string `json:"content" binding:"required"`
+	}
+
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		log.Printf("错误点 B: 绑定请求数据失败: %v", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 查找文章
+	var article models.Article
+	if err := global.Db.Where("id = ?", articleid).First(&article).Error; err != nil {
+		log.Printf("错误点 C: 获取文章失败: %v", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "文章不存在"})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "数据库查询失败"})
+		}
+		return
+	}
+
+	// 获取用户信息
+	userID, _, userRole, err := utils.GetUserInfo(ctx)
+	if err != nil {
+		log.Printf("错误点 D: %v", err)
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+		return
+	}
+
+	// 权限检查：只有管理员或文章作者可以编辑文章
+	if userRole != "admin" && article.AuthorID != userID {
+		log.Printf("错误点 E: 用户 %v 没有权限编辑文章 %s", userID, articleid)
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "没有权限编辑此文章"})
+		return
+	}
+
+	// 执行更新操作
+	updates := map[string]interface{}{
+		"title":   input.Title,
+		"preview": input.Preview,
+		"content": input.Content,
+	}
+
+	if err := global.Db.Model(&article).Updates(updates).Error; err != nil {
+		log.Printf("错误点 F: 更新文章时数据库出错: %v", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "更新文章失败，请稍后重试"})
+		return
+	}
+
+	// 清除缓存
+	clearArticleCache()
+
+	log.Printf("文章更新成功！用户ID: %v, 文章ID: %s", userID, articleid)
+	ctx.JSON(http.StatusOK, gin.H{
+		"message":    "文章更新成功",
+		"article_id": articleid,
+	})
+}
+
 func DeleteArticleByID(ctx *gin.Context) {
 	articleid := ctx.Param("id")
 
@@ -277,7 +329,7 @@ func DeleteArticleByID(ctx *gin.Context) {
 	}
 
 	// 获取用户信息
-	userID, _, userRole, err := getUserInfo(ctx)
+	userID, _, userRole, err := utils.GetUserInfo(ctx)
 	if err != nil {
 		log.Printf("错误点 C: %v", err)
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})

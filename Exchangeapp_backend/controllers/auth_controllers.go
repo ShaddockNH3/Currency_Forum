@@ -28,7 +28,21 @@ func Register(ctx *gin.Context) {
 		return
 	}
 
-	log.Printf("1. JSON 绑定成功, 准备处理用户: %s", user.Username)
+	if user.Role != "admin" {
+        user.Role = "user"
+    }
+
+	if len(user.Username)<=5||len(user.Username)>=21{
+		ctx.JSON(http.StatusBadGateway,gin.H{"error":"用户名长度必须在6-20位之间"})
+		return
+	}
+
+	if len(user.Password)<=5||len(user.Password)>=21{
+		ctx.JSON(http.StatusBadRequest,gin.H{"error":"密码长度必须在6-20位之间"})
+		return 
+	}
+
+	log.Printf("1. JSON 绑定成功,角色为%s, 准备处理用户: %s",user.Role, user.Username)
 
 	hashedPwd, err := utils.HashPassword(user.Password)
 
