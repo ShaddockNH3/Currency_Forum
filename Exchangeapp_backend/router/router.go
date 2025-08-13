@@ -1,7 +1,7 @@
 package router
 
 import (
-	"exchangeapp/controllers"
+	"exchangeapp/di"
 	"exchangeapp/middlewares"
 	"time"
 
@@ -20,34 +20,44 @@ func SetupRouter() *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	// 创建依赖注入容器
+	container := di.NewContainer()
+
 	auth := r.Group("/api/auth")
 	{
-		auth.POST("/login", controllers.Login)
-		auth.POST("/register", controllers.Register)
+		auth.POST("/login", container.AuthController.Login)
+		auth.POST("/register", container.AuthController.Register)
 	}
 
 	api := r.Group("/api")
 
-	api.GET("/exchangeRates", controllers.GetExchangeRate)
+	api.GET("/exchangeRates", container.ExchangeRateController.GetExchangeRate)
 
 	api.Use(middlewares.AuthMiddleware())
 	{
-		api.POST("/exchangeRates", controllers.CreateExchangeRate)
-		api.PUT("/exchangeRates/:id", controllers.UpdateExchangeRateByID)
-		api.DELETE("/exchangeRates/:id", controllers.DeleteExchangeRateByID)
+		api.POST("/exchangeRates", container.ExchangeRateController.CreateExchangeRate)
+		api.PUT("/exchangeRates/:id", container.ExchangeRateController.UpdateExchangeRateByID)
+		api.DELETE("/exchangeRates/:id", container.ExchangeRateController.DeleteExchangeRateByID)
 
-		api.POST("/articles", controllers.CreateArticle)
-		api.GET("/articles", controllers.GetArticles)
-		api.GET("/articles/:id", controllers.GetArticlesByID)
-		api.PUT("/articles/:id", controllers.UpdateArticleByID)
-		api.DELETE("/articles/:id", controllers.DeleteArticleByID)
+		api.POST("/articles", container.ArticleController.CreateArticle)
+		api.GET("/articles", container.ArticleController.GetArticles)
+		api.GET("/articles/:id", container.ArticleController.GetArticlesByID)
+		api.PUT("/articles/:id", container.ArticleController.UpdateArticleByID)
+		api.DELETE("/articles/:id", container.ArticleController.DeleteArticleByID)
 
-		api.POST("/articles/:id/like", controllers.LikeArticle)
-		api.GET("/articles/:id/like", controllers.GetArticleLikes)
+		api.POST("/articles/:id/like", container.LikeController.LikeArticle)
+		api.GET("/articles/:id/like", container.LikeController.GetArticleLikes)
 
-		api.GET("/users/:username", controllers.GetHomePage)
-		api.PUT("/users/:username", controllers.UpdateUserProfile)
+		api.GET("/users/:username", container.HomePageController.GetHomePage)
+		api.PUT("/users/:username", container.HomePageController.UpdateUserProfile)
+	}
 
+	wallet := api.Group("/wallets")
+	wallet.Use(middlewares.AuthMiddleware())
+	{
+		wallet.POST("", container.WalletController.CreateWallet)
+		wallet.GET("", container.WalletController.GetWallet)
+		wallet.PUT("", container.WalletController.UpdateWallet)
 	}
 
 	return r

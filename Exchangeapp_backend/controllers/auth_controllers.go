@@ -1,8 +1,9 @@
+// Package controllers 处理HTTP请求，负责请求参数验证、调用服务层和返回响应
 package controllers
 
 import (
-	"exchangeapp/global"
 	"exchangeapp/models"
+	"exchangeapp/service"
 	"exchangeapp/utils"
 	"log"
 	"net/http"
@@ -10,126 +11,105 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/*
-注册流程：
-1. 接收用户输入的 JSON 数据
-2. 将密码进行哈希处理
-3. 生成 JWT
-4. 迁移数据库
-5. 创建用户
-6. 返回 Token
-*/
-func Register(ctx *gin.Context) {
+// AuthController 认证控制器，处理用户注册和登录相关请求
+type AuthController struct {
+	userService service.UserService
+}
+
+// NewAuthController 创建认证控制器实例
+func NewAuthController(userService service.UserService) *AuthController {
+	return &AuthController{userService: userService}
+}
+
+// Register 处理用户注册请求
+// 流程：1.参数绑定 2.数据验证 3.调用服务层 4.返回Token
+func (c *AuthController) Register(ctx *gin.Context) {
 	var user models.User
 
-	log.Println("开始处理注册请求...")
+	log.Printf("[Auth] 开始处理用户注册请求")
+
+	// 绑定JSON请求数据
 	if err := ctx.ShouldBindJSON(&user); err != nil {
+		log.Printf("[Auth] 注册请求数据绑定失败: %v", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if user.Role != "admin" {
-        user.Role = "user"
-    }
+	log.Printf("[Auth] 开始验证注册数据，用户名: %s", user.Username)
 
-	if len(user.Username)<=5||len(user.Username)>=21{
-		ctx.JSON(http.StatusBadGateway,gin.H{"error":"用户名长度必须在6-20位之间"})
+	// 验证用户名格式
+	validationResultUsername := utils.ValidateUsername(user.Username)
+	if !validationResultUsername.IsValid {
+		log.Printf("[Auth] 用户名验证失败: %v", validationResultUsername.Errors[0])
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": validationResultUsername.Errors[0]})
 		return
 	}
 
-	if len(user.Password)<=5||len(user.Password)>=21{
-		ctx.JSON(http.StatusBadRequest,gin.H{"error":"密码长度必须在6-20位之间"})
-		return 
+	// 验证密码格式
+	validationResultPassword := utils.ValidatePassword(user.Password)
+	if !validationResultPassword.IsValid {
+		log.Printf("[Auth] 密码验证失败: %v", validationResultPassword.Errors[0])
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": validationResultPassword.Errors[0]})
+		return
 	}
 
-	log.Printf("1. JSON 绑定成功,角色为%s, 准备处理用户: %s",user.Role, user.Username)
+	// 验证邮箱格式
+	validationResultEmail := utils.ValidateEmail(user.Email)
+	if !validationResultEmail.IsValid {
+		log.Printf("[Auth] 邮箱验证失败: %v", validationResultEmail.Errors[0])
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": validationResultEmail.Errors[0]})
+		return
+	}
 
-	hashedPwd, err := utils.HashPassword(user.Password)
+	// 验证手机号格式
+	validationResultPhone := utils.ValidatePhone(user.Phone)
+	if !validationResultPhone.IsValid {
+		log.Printf("[Auth] 手机号验证失败: %v", validationResultPhone.Errors[0])
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": validationResultPhone.Errors[0]})
+		return
+	}
 
+	log.Printf("[Auth] 数据验证通过，调用服务层处理注册，角色: %s", user.Role)
+
+	// 调用服务层处理注册业务逻辑
+	token, err := c.userService.Register(&user)
 	if err != nil {
-		log.Printf("错误点 A: 密码哈希失败: %v", err)
+		log.Printf("[Auth] 服务层注册失败: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	user.Password = hashedPwd
-
-	log.Println("3. 密码哈希成功, 准备创建用户")
-
-	// 注意：数据库迁移已在应用启动时完成，此处不再需要
-
-	if err := global.Db.Create(&user).Error; err != nil {
-		log.Printf("错误点 C: 创建用户失败: %v", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	log.Println("4. 用户创建成功！准备生成 JWT")
-
-	// 在用户创建成功后生成 JWT，此时 user.ID 已经有值
-	token, err := utils.GenrateJWT(user.Username, user.Role, int(user.ID))
-	if err != nil {
-		log.Printf("错误点 D: 生成 JWT 失败: %v", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	log.Println("5. JWT 生成成功！准备返回 Token")
-
+	log.Printf("[Auth] 用户注册成功，用户名: %s", user.Username)
 	ctx.JSON(http.StatusOK, gin.H{"token": token})
 }
 
-/*
-登录流程：
-1. 接收用户输入的 JSON 数据
-2. 查询用户
-3. 验证密码
-4. 生成 JWT
-5. 返回 Token
-*/
-func Login(ctx *gin.Context) {
+// Login 处理用户登录请求
+// 支持使用用户名、邮箱或手机号登录
+func (c *AuthController) Login(ctx *gin.Context) {
 	var input struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
+		LoginField string `json:"loginField"` // 支持用户名、邮箱、手机号
+		Password   string `json:"password"`
 	}
 
-	log.Println("开始处理登录请求...")
+	log.Printf("[Auth] 开始处理用户登录请求")
 
+	// 绑定JSON请求数据
 	if err := ctx.ShouldBindJSON(&input); err != nil {
-		log.Printf("错误点 A: JSON 绑定失败: %v", err)
+		log.Printf("[Auth] 登录请求数据绑定失败: %v", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Printf("1. JSON 绑定成功, 准备验证用户: %s", input.Username)
+	log.Printf("[Auth] 调用服务层处理登录，登录字段: %s", input.LoginField)
 
-	var user models.User
-
-	if err := global.Db.Where("username=?", input.Username).First(&user).Error; err != nil {
-		log.Printf("错误点 B: 用户查询失败: %v", err)
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "wrong credentials"})
-		return
-	}
-
-	log.Println("2. 用户查询成功, 准备验证密码")
-
-	if !utils.CheckPassword(input.Password, user.Password) {
-		log.Printf("错误点 C: 密码验证失败")
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "wrong credentials"})
-		return
-	}
-
-	log.Println("3. 密码验证成功, 准备生成 JWT")
-
-	token, err := utils.GenrateJWT(user.Username, user.Role, int(user.ID))
-
+	// 调用服务层处理登录业务逻辑
+	token, err := c.userService.Login(input.LoginField, input.Password)
 	if err != nil {
-		log.Printf("错误点 D: 生成 JWT 失败: %v", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[Auth] 服务层登录失败: %v", err)
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "登录信息或密码错误"})
 		return
 	}
 
-	log.Println("4. JWT 生成成功, 准备返回 Token")
-
+	log.Printf("[Auth] 用户登录成功，登录字段: %s", input.LoginField)
 	ctx.JSON(http.StatusOK, gin.H{"token": token})
 }

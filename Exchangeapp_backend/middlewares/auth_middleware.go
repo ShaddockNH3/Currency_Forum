@@ -24,7 +24,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			log.Printf("Token前20字符: %s...", token[:20])
 		}
 
-		username, role, id, err := utils.ParseJWT(token)
+		claims, err := utils.ParseJWT(token)
 		if err != nil {
 			log.Printf("认证失败: JWT 解析错误: %v", err)
 			log.Printf("Token内容: %s", token)
@@ -33,11 +33,15 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		username := claims.Username
+		role := claims.Role
+		id := claims.UserID
+
 		log.Printf("认证成功: 用户=%s, 角色=%s, ID=%d", username, role, id)
 
 		ctx.Set("username", username)
 		ctx.Set("role", role)
-		ctx.Set("id", id)
+		ctx.Set("userID", id)
 
 		ctx.Next()
 	}

@@ -1,9 +1,8 @@
 package controllers
 
 import (
-	"errors"
-	"exchangeapp/global"
 	"exchangeapp/models"
+	"exchangeapp/service"
 	"exchangeapp/utils"
 	"log"
 	"net/http"
@@ -11,18 +10,17 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-/*
-创建汇率
-1. 接收请求数据
-2. 验证数据
-3. 迁移数据库
-4. 创建汇率
-5. 返回响应
-*/
-func CreateExchangeRate(ctx *gin.Context) {
+type ExchangeRateController struct {
+	exchangeRateService service.ExchangeRateService
+}
+
+func NewExchangeRateController(exchangeRateService service.ExchangeRateService) *ExchangeRateController {
+	return &ExchangeRateController{exchangeRateService: exchangeRateService}
+}
+
+func (c *ExchangeRateController) CreateExchangeRate(ctx *gin.Context) {
 	var input struct {
 		FromCurrency string  `json:"fromCurrency" binding:"required"`
 		ToCurrency   string  `json:"toCurrency" binding:"required"`
@@ -35,27 +33,15 @@ func CreateExchangeRate(ctx *gin.Context) {
 		return
 	}
 
-	// 获取当前用户ID
-	userID, exists := ctx.Get("userID")
-	if !exists {
+	// 获取用户信息
+	userID, _, _, err := utils.GetUserInfoFromContext(ctx)
+	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
-	// 检查用户是否为管理员
-	var user models.User
-	if err := global.Db.First(&user, userID).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify user"})
-		return
-	}
-
-	if user.Role != "admin" {
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "Only admin can create exchange rates"})
-		return
-	}
-
-	// 创建汇率
-	exchangeRate := models.ExchangeRate{
+	// 创建汇率对象
+	exchangeRate := &models.ExchangeRate{
 		FromCurrency: input.FromCurrency,
 		ToCurrency:   input.ToCurrency,
 		Rate:         input.Rate,
@@ -63,26 +49,23 @@ func CreateExchangeRate(ctx *gin.Context) {
 		Date:         time.Now(),
 	}
 
-	if err := global.Db.Create(&exchangeRate).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create exchange rate"})
+	// 调用Service层创建汇率
+	if err := c.exchangeRateService.Create(exchangeRate, uint(userID)); err != nil {
+		if err == utils.ErrForbidden {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": "Only admin can create exchange rates"})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create exchange rate"})
+		}
 		return
 	}
 
 	ctx.JSON(http.StatusCreated, exchangeRate)
 }
 
-/*
-获取汇率
-1. 接收请求数据
-2. 验证数据
-3. 迁移数据库
-4. 创建汇率
-5. 返回响应
-*/
-func GetExchangeRate(ctx *gin.Context) {
-	var exchangeRates []models.ExchangeRate
-
-	if err := global.Db.Find(&exchangeRates).Error; err != nil {
+func (c *ExchangeRateController) GetExchangeRate(ctx *gin.Context) {
+	// 调用Service层获取所有汇率
+	exchangeRates, err := c.exchangeRateService.GetAll()
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch exchange rates"})
 		return
 	}
@@ -90,7 +73,7 @@ func GetExchangeRate(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, exchangeRates)
 }
 
-func DeleteExchangeRateByID(ctx *gin.Context) {
+func (c *ExchangeRateController) DeleteExchangeRateByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 
 	// 验证汇率ID参数
@@ -100,37 +83,24 @@ func DeleteExchangeRateByID(ctx *gin.Context) {
 		return
 	}
 
-	// 查找汇率
-	var exchangeRate models.ExchangeRate
-	if err := global.Db.Where("id = ?", id).First(&exchangeRate).Error; err != nil {
-		log.Printf("错误点 B: 获取汇率失败: %v", err)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "汇率不存在"})
-		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "数据库查询失败"})
-		}
-		return
-	}
-
 	// 获取用户信息
-	userID, _, userRole, err := utils.GetUserInfo(ctx)
+	userID, _, _, err := utils.GetUserInfoFromContext(ctx)
 	if err != nil {
-		log.Printf("错误点 C: %v", err)
+		log.Printf("错误点 B: %v", err)
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
 		return
 	}
 
-	// 权限检查：只有管理员可以删除汇率
-	if userRole != "admin" {
-		log.Printf("错误点 D: 用户 %v 没有权限删除汇率 %s", userID, id)
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "没有权限删除汇率"})
-		return
-	}
-
-	// 执行删除操作
-	if err := global.Db.Delete(&exchangeRate).Error; err != nil {
-		log.Printf("错误点 E: 删除汇率时数据库出错: %v", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "删除汇率失败，请稍后重试"})
+	// 调用Service层删除汇率
+	if err := c.exchangeRateService.Delete(id, uint(userID)); err != nil {
+		log.Printf("错误点 C: 删除汇率失败: %v", err)
+		if err == utils.ErrExchangeRateNotFound {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "汇率不存在"})
+		} else if err == utils.ErrForbidden {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": "没有权限删除汇率"})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "删除汇率失败，请稍后重试"})
+		}
 		return
 	}
 
@@ -141,9 +111,9 @@ func DeleteExchangeRateByID(ctx *gin.Context) {
 	})
 }
 
-func UpdateExchangeRateByID(ctx *gin.Context) {
+func (c *ExchangeRateController) UpdateExchangeRateByID(ctx *gin.Context) {
 	id := ctx.Param("id")
-	rateID, err := strconv.Atoi(id)
+	_, err := strconv.Atoi(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid exchange rate ID"})
 		return
@@ -161,46 +131,30 @@ func UpdateExchangeRateByID(ctx *gin.Context) {
 		return
 	}
 
-	// 获取当前用户ID
-	userID, exists := ctx.Get("userID")
-	if !exists {
+	// 获取用户信息
+	userID, _, _, err := utils.GetUserInfoFromContext(ctx)
+	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
-	// 检查用户是否为管理员
-	var user models.User
-	if err := global.Db.First(&user, userID).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify user"})
-		return
+	// 创建汇率对象
+	exchangeRate := &models.ExchangeRate{
+		FromCurrency: input.FromCurrency,
+		ToCurrency:   input.ToCurrency,
+		Rate:         input.Rate,
+		Description:  input.Description,
 	}
 
-	if user.Role != "admin" {
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "Only admin can update exchange rates"})
-		return
-	}
-
-	// 查找汇率
-	var exchangeRate models.ExchangeRate
-	if err := global.Db.First(&exchangeRate, rateID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+	// 调用Service层更新汇率
+	if err := c.exchangeRateService.Update(id, exchangeRate, uint(userID)); err != nil {
+		if err == utils.ErrExchangeRateNotFound {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "Exchange rate not found"})
+		} else if err == utils.ErrForbidden {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": "Only admin can update exchange rates"})
 		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find exchange rate"})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update exchange rate"})
 		}
-		return
-	}
-
-	// 更新汇率
-	updates := map[string]interface{}{
-		"fromCurrency": input.FromCurrency,
-		"toCurrency":   input.ToCurrency,
-		"rate":         input.Rate,
-		"description":  input.Description,
-	}
-
-	if err := global.Db.Model(&exchangeRate).Updates(updates).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update exchange rate"})
 		return
 	}
 
