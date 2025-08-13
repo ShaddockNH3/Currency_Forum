@@ -10,7 +10,6 @@
 - [架构设计](#架构设计)
 - [功能特性](#功能特性)
 - [项目结构](#项目结构)
-- [快速开始](#快速开始)
 - [API文档](#api文档)
 - [开发计划](#开发计划)
 - [贡献指南](#贡献指南)
@@ -49,7 +48,7 @@ Currency Forum 是一个专注于货币话题讨论的论坛系统，集成了�
 - **认证**: JWT (JSON Web Token)
 - **密码**: bcrypt 加密
 
-### 前端技术
+### 前端技术（计划中）
 - **框架**: Vue.js 3
 - **构建工具**: Vite
 - **HTTP客户端**: Axios
@@ -140,109 +139,67 @@ Currency Forum 是一个专注于货币话题讨论的论坛系统，集成了�
 
 ```
 Exchangeapp_backend/
-├── 📁 config/                 # 配置文件
-│   ├── 🐹 config.go           # 配置加载
-│   ├── 📄 config.yml          # 配置文件
-│   ├── 🐹 db.go              # 数据库配置
-│   └── 🐹 redis.go           # Redis配置
-├── 📁 controllers/            # 控制器层
-│   ├── 🐹 auth_controllers.go     # 认证控制器
-│   ├── 🐹 article_controllers.go  # 文章控制器
-│   ├── 🐹 wallet_controller.go    # 钱包控制器
-│   ├── 🐹 exchange_rate_controllers.go # 汇率控制器
-│   ├── 🐹 homepage_controller.go  # 主页控制器
-│   └── 🐹 like_controllers.go     # 点赞控制器
-├── 📁 service/                # 服务层
-│   ├── 🐹 user_service.go         # 用户服务
-│   ├── 🐹 article_service.go      # 文章服务
-│   ├── 🐹 wallet.service.go       # 钱包服务
-│   ├── 🐹 exchange_rate_service.go # 汇率服务
-│   ├── 🐹 homepage_service.go     # 主页服务
-│   └── 🐹 like_service.go         # 点赞服务
-├── 📁 repository/             # 仓库层
-│   ├── 🐹 user_repository.go      # 用户仓库
-│   ├── 🐹 article_repository.go   # 文章仓库
-│   ├── 🐹 wallet_repsitory.go     # 钱包仓库
-│   └── 🐹 exchange_rate_repository.go # 汇率仓库
-├── 📁 models/                 # 数据模型
-│   ├── 🐹 user.go                 # 用户模型
-│   ├── 🐹 article.go              # 文章模型
-│   ├── 🐹 wallet.go               # 钱包模型
-│   ├── 🐹 bill.go                 # 账单模型
-│   └── 🐹 exchange_rate.go        # 汇率模型
-├── 📁 dto/                    # 数据传输对象
-│   ├── 🐹 article_dto.go          # 文章DTO
-│   ├── 🐹 wallet_dto.go           # 钱包DTO
-│   └── 🐹 homepage_dto.go         # 主页DTO
-├── 📁 input/                  # 输入验证
-│   ├── 🐹 article_input.go        # 文章输入
-│   ├── 🐹 wallet_input.go         # 钱包输入
-│   └── 🐹 homepage_input.go       # 主页输入
-├── 📁 utils/                  # 工具类
-│   ├── 🐹 auth.go                 # 认证工具
-│   ├── 🐹 errors.go               # 错误定义
-│   ├── 🐹 validator.go            # 验证工具
-│   └── 🐹 converter.go            # 转换工具
-├── 📁 middlewares/            # 中间件
-│   └── 🐹 auth_middleware.go      # 认证中间件
-├── 📁 di/                     # 依赖注入
-│   └── 🐹 container.go            # DI容器
-├── 📁 router/                 # 路由
-│   └── 🐹 router.go               # 路由配置
-├── 📁 global/                 # 全局变量
-│   └── 🐹 global.go               # 全局配置
-└── 🐹 main.go                     # 程序入口
 ```
-
-## 🚀 快速开始
-
-### 环境要求
-- Go 1.21 或更高版本
-- MySQL 8.0 或更高版本
-- Node.js 16+ (前端开发)
-- Git
-
-### 后端启动
-
-1. **克隆项目**
-```bash
-git clone <repository-url>
-cd Currency_Forum/Exchangeapp_backend
+├── 📁 config/
+│   ├── 🐹 config.go
+│   ├── ⚙️ config.yml
+│   ├── 🐹 db.go
+│   └── 🐹 redis.go
+├── 📁 controllers/
+│   ├── 🐹 article_controllers.go
+│   ├── 🐹 auth_controllers.go
+│   ├── 🐹 exchange_rate_controllers.go
+│   ├── 🐹 homepage_controller.go
+│   ├── 🐹 like_controllers.go
+│   └── 🐹 wallet_controller.go
+├── 📁 di/
+│   └── 🐹 container.go
+├── 📁 dto/
+│   ├── 🐹 article_dto.go
+│   ├── 🐹 homepage_dto.go
+│   └── 🐹 wallet_dto.go
+├── 📁 global/
+│   └── 🐹 global.go
+├── 📁 input/
+│   ├── 🐹 article_input.go
+│   ├── 🐹 homepage_input.go
+│   ├── 🐹 wallet.go
+│   └── 🐹 wallet_input.go
+├── 📁 middlewares/
+│   └── 🐹 auth_middleware.go
+├── 📁 models/
+│   ├── 🐹 article.go
+│   ├── 🐹 bill.go
+│   ├── 🐹 exchange_rate.go
+│   ├── 🐹 user.go
+│   └── 🐹 wallet.go
+├── 📁 repository/
+│   ├── 🐹 article_repository.go
+│   ├── 🐹 exchange_rate_repository.go
+│   ├── 🐹 user_repository.go
+│   └── 🐹 wallet_repsitory.go
+├── 📁 router/
+│   └── 🐹 router.go
+├── 📁 service/
+│   ├── 🐹 article_service.go
+│   ├── 🐹 exchange_rate_service.go
+│   ├── 🐹 homepage_service.go
+│   ├── 🐹 like_service.go
+│   ├── 🐹 user_service.go
+│   └── 🐹 wallet.service.go
+├── 📁 utils/
+│   ├── 🐹 auth.go
+│   ├── 🐹 bills.go
+│   ├── 🐹 common.go
+│   ├── 🐹 converter.go
+│   ├── 🐹 errors.go
+│   ├── 🐹 utils.go
+│   └── 🐹 validator.go
+├── 🐹 go.mod
+├── 🐹 go.sum
+├── ⚙️ main.exe
+└── 🐹 main.go
 ```
-
-2. **安装依赖**
-```bash
-go mod tidy
-```
-
-3. **配置数据库**
-```yaml
-# config/config.yml
-database:
-  host: localhost
-  port: 3306
-  username: your_username
-  password: your_password
-  dbname: currency_forum
-  charset: utf8mb4
-```
-
-4. **启动服务**
-```bash
-go run main.go
-```
-
-服务将在 `http://localhost:3000` 启动
-
-### 前端启动
-
-```bash
-cd Currency_Forum/frontend
-npm install
-npm run dev
-```
-
-前端将在 `http://localhost:5173` 启动
 
 ## 📚 API文档
 
