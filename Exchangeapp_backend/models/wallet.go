@@ -31,3 +31,19 @@ type WalletBalance struct {
 	CurrencyCode string          `gorm:"size:10"`              // 货币代码 (e.g., "USD", "JPY", "CNY")
 	Amount       decimal.Decimal `gorm:"type:decimal(20, 8);"` // 余额金额，支持高精度
 }
+
+// Bill 交易账单模型
+type Bill struct {
+	gorm.Model
+	WalletID uint
+	Wallet   Wallet
+
+	TransactionType string          `gorm:"size:20"` // 交易类型：deposit(充值)/withdraw(取出)/exchange(兑换)/transfer(转账)
+	Amount          decimal.Decimal `gorm:"type:decimal(20, 8);"`
+	CurrencyCode    string          `gorm:"size:10"`
+
+	RelatedWalletID uint // 关联钱包ID，用于转账等涉及对方的交易
+
+	Description string // 交易描述 (e.g., "购买猫抓板", "收到CozyPaws的转账")
+	Status      string // 交易状态：completed(完成)/pending(处理中)/failed(失败)
+}

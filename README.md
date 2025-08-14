@@ -38,8 +38,11 @@ Currency Forum 是一个专注于货币话题讨论的论坛系统，集成了�
 - 🔧 **依赖注入**：实现完整的依赖注入容器
 - 🛡️ **错误处理**：建立统一的错误处理机制
 
-### 第四阶段：接入现实
-- 🦉 **真实货币**：引入真实货币，每小时更新一次
+### 第四阶段：钱包系统
+- 💰 **完整钱包系统**：实现多币种钱包管理
+- 🔄 **交易功能**：充值、提现、货币兑换全部到位
+- 📊 **账单系统**：完整的交易记录和查询功能
+- 🏦 **余额管理**：支持多币种余额实时查询
 
 ## 🛠 技术栈
 
@@ -128,10 +131,14 @@ Currency Forum 是一个专注于货币话题讨论的论坛系统，集成了�
 - [x] 多币种钱包创建
 - [x] 钱包信息管理
 - [x] 钱包状态控制
-- [ ] 充值功能 (开发中)
-- [ ] 提现功能 (开发中)
+- [x] 多币种余额管理
+- [x] 充值功能
+- [x] 提现功能
+- [x] 汇率兑换功能
+- [x] 账单记录与查询
+- [x] 余额查询（全部/单币种）
 - [ ] P2P转账 (计划中)
-- [ ] 汇率兑换 (计划中)
+- [ ] 转账手续费 (计划中)
 
 ### 📊 汇率服务
 - [x] 实时汇率查询
@@ -150,6 +157,7 @@ Exchangeapp_backend/
 ├── 📁 controllers/
 │   ├── 🐹 article_controllers.go
 │   ├── 🐹 auth_controllers.go
+│   ├── 🐹 bill_controller.go
 │   ├── 🐹 exchange_rate_controllers.go
 │   ├── 🐹 homepage_controller.go
 │   ├── 🐹 like_controllers.go
@@ -158,6 +166,7 @@ Exchangeapp_backend/
 │   └── 🐹 container.go
 ├── 📁 dto/
 │   ├── 🐹 article_dto.go
+│   ├── 🐹 bill_dto.go
 │   ├── 🐹 homepage_dto.go
 │   └── 🐹 wallet_dto.go
 ├── 📁 global/
@@ -177,6 +186,7 @@ Exchangeapp_backend/
 │   └── 🐹 wallet.go
 ├── 📁 repository/
 │   ├── 🐹 article_repository.go
+│   ├── 🐹 bill_repository.go
 │   ├── 🐹 exchange_rate_repository.go
 │   ├── 🐹 user_repository.go
 │   └── 🐹 wallet_repsitory.go
@@ -184,6 +194,7 @@ Exchangeapp_backend/
 │   └── 🐹 router.go
 ├── 📁 service/
 │   ├── 🐹 article_service.go
+│   ├── 🐹 bill_service.go
 │   ├── 🐹 exchange_rate_service.go
 │   ├── 🐹 homepage_service.go
 │   ├── 🐹 like_service.go
@@ -191,12 +202,12 @@ Exchangeapp_backend/
 │   └── 🐹 wallet.service.go
 ├── 📁 utils/
 │   ├── 🐹 auth.go
-│   ├── 🐹 bills.go
 │   ├── 🐹 common.go
 │   ├── 🐹 converter.go
 │   ├── 🐹 errors.go
 │   ├── 🐹 utils.go
-│   └── 🐹 validator.go
+│   ├── 🐹 validator.go
+│   └── 🐹 wallet.go
 ├── 🐹 go.mod
 ├── 🐹 go.sum
 ├── ⚙️ main.exe
@@ -222,9 +233,23 @@ DELETE /api/articles/:id   # 删除文章
 
 ### 钱包管理
 ```http
-POST /api/wallets          # 创建钱包
-GET  /api/wallets          # 获取钱包信息
-PUT  /api/wallets          # 更新钱包信息
+POST /api/wallets                    # 创建钱包
+GET  /api/wallets                    # 获取钱包信息
+PUT  /api/wallets                    # 更新钱包信息
+
+# 余额管理
+POST /api/wallets/balance            # 创建新币种余额
+GET  /api/wallets/balances           # 获取所有币种余额
+GET  /api/wallets/balance/:currency  # 获取特定币种余额
+
+# 交易功能
+POST /api/wallets/deposit            # 充值
+POST /api/wallets/withdraw           # 提现
+POST /api/wallets/exchange           # 货币兑换
+
+# 账单查询
+GET  /api/wallets/bills              # 获取账单列表 (支持分页)
+GET  /api/wallets/bills/:id          # 获取特定账单详情
 ```
 
 ### 汇率服务
@@ -242,21 +267,21 @@ PUT /api/users/:username   # 更新用户资料
 ## 🎯 开发计划
 
 ### 近期目标 (v1.1)
-- [ ] **钱包交易系统**
-  - [ ] 充值功能实现
-  - [ ] 提现功能实现
-  - [ ] 余额查询优化
-  - [ ] 交易记录管理
+- [x] **钱包交易系统** ✅ (已完成)
+  - [x] 充值功能实现
+  - [x] 提现功能实现
+  - [x] 余额查询优化
+  - [x] 交易记录管理
+
+- [x] **汇率兑换系统** ✅ (已完成)
+  - [x] 实时汇率兑换
+  - [x] 兑换历史记录
+  - [ ] 兑换手续费 (计划中)
 
 - [ ] **P2P转账系统**
   - [ ] 用户间转账
   - [ ] 转账记录追踪
   - [ ] 转账手续费计算
-
-- [ ] **汇率兑换系统**
-  - [ ] 实时汇率兑换
-  - [ ] 兑换手续费
-  - [ ] 兑换历史记录
 
 ### 中期目标 (v1.2)
 - [ ] **评论系统**
@@ -296,4 +321,4 @@ PUT /api/users/:username   # 更新用户资料
 
 ---
 
-**项目状态**: 🚧 积极开发中
+**项目状态**: 🎉 核心功能完成，钱包系统全面上线

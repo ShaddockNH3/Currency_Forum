@@ -55,9 +55,28 @@ func SetupRouter() *gin.Engine {
 	wallet := api.Group("/wallets")
 	wallet.Use(middlewares.AuthMiddleware())
 	{
+		// 钱包基本操作 - 已实现
 		wallet.POST("", container.WalletController.CreateWallet)
 		wallet.GET("", container.WalletController.GetWallet)
 		wallet.PUT("", container.WalletController.UpdateWallet)
+
+		// 钱包余额操作 - 已实现
+		wallet.POST("/balance", container.WalletController.CreateBalance)
+		wallet.GET("/balances", container.WalletController.GetAllBalances)                // 获取所有余额
+		wallet.GET("/balance/:currency", container.WalletController.GetBalanceByCurrency) // 获取特定货币余额
+
+		// 钱包交易操作 - 已实现
+		wallet.POST("/deposit", container.WalletController.Deposit)   // 充值
+		wallet.POST("/withdraw", container.WalletController.Withdraw) // 取出
+		wallet.POST("/exchange", container.WalletController.Exchange) // 货币兑换
+
+		// 账单相关操作 - 已实现
+		wallet.GET("/bills", container.BillController.GetBills)        // 获取账单列表
+		wallet.GET("/bills/:id", container.BillController.GetBillByID) // 获取特定账单
+
+		// TODO: 以下路由需要实现 TransactionController（转账、P2P功能）
+		// wallet.POST("/transfer", container.TransactionController.Transfer)  // 转账
+		// wallet.POST("/p2p", container.TransactionController.P2P)           // P2P交易
 	}
 
 	return r
