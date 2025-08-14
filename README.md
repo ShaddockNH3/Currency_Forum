@@ -45,7 +45,26 @@ git clone [https://github.com/ShaddockNH3/Currency_Forum.git](https://github.com
 cd Currency_Forum
 ```
 
-### 3. 后端启动流程 (Backend Setup)
+### 3. 前端启动流程 (Frontend Setup)
+
+1.  **打开一个新的终端**，然后进入前端目录:
+    ```bash
+    cd Exchangeapp_frontend
+    ```
+
+2.  **安装依赖**:
+    (如果你是第一次运行，或者 `package.json` 有更新，就需要执行这一步)
+    ```bash
+    npm install
+    ```
+
+3.  **启动前端开发服务**:
+    ```bash
+    npm run dev
+    ```
+    当你看到 Vite 打印出类似 `> Local: http://localhost:5173/` 的信息时，就说明前端也成功启动啦！
+
+### 4. 后端启动流程 (Backend Setup)
 
 1.  **进入后端目录**:
     ```bash
@@ -80,25 +99,6 @@ cd Currency_Forum
     go run .
     ```
     当你看到类似 `Server is running at :3000` 的日志时，就说明后端已经成功启动啦！
-
-### 4. 前端启动流程 (Frontend Setup)
-
-1.  **打开一个新的终端**，然后进入前端目录:
-    ```bash
-    cd Exchangeapp_frontend
-    ```
-
-2.  **安装依赖**:
-    (如果你是第一次运行，或者 `package.json` 有更新，就需要执行这一步)
-    ```bash
-    npm install
-    ```
-
-3.  **启动前端开发服务**:
-    ```bash
-    npm run dev
-    ```
-    当你看到 Vite 打印出类似 `> Local: http://localhost:5173/` 的信息时，就说明前端也成功启动啦！
 
 ### 5. 开始探索！
 
