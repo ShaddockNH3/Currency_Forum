@@ -10,7 +10,7 @@ import (
 
 type ArticleService interface {
 	Create(articleInput *input.ArticleInput, authorID int, author string) (*dto.ArticleDTO, error)
-	GetByID(id string) (*models.Article, error)
+	GetByID(id string) (*dto.ArticleDTO, error)
 	GetAll(page, pageSize int) (*dto.ArticlePageDTO, error)
 	GetByAuthorID(authorID int, page, pageSize int) ([]models.Article, int64, error)
 	Update(id string, articleInput *input.ArticleInput, userID int, userRole string) error
@@ -27,9 +27,9 @@ func NewArticleService(articleRepo repository.ArticleRepository) ArticleService 
 
 func (s *articleService) Create(articleInput *input.ArticleInput, authorID int, author string) (*dto.ArticleDTO, error) {
 	article := &models.Article{
-		Title:   articleInput.Title,
-		Content: articleInput.Content,
-		Preview: articleInput.Preview,
+		Title:    articleInput.Title,
+		Content:  articleInput.Content,
+		Preview:  articleInput.Preview,
 		AuthorID: authorID,
 		Author:   author,
 	}
@@ -39,22 +39,25 @@ func (s *articleService) Create(articleInput *input.ArticleInput, authorID int, 
 	}
 
 	response := &dto.ArticleDTO{
-		Title:    article.Title,
-		Content:  article.Content,
-		Preview:  article.Preview,
-		AuthorID: int(article.AuthorID),
-		Author:   article.Author,
+		ID:        article.ID,
+		Title:     article.Title,
+		Content:   article.Content,
+		Preview:   article.Preview,
+		AuthorID:  int(article.AuthorID),
+		Author:    article.Author,
+		CreatedAt: article.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt: article.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
 
 	return response, nil
 }
 
-func (s *articleService) GetByID(id string) (*models.Article, error) {
+func (s *articleService) GetByID(id string) (*dto.ArticleDTO, error) {
 	article, err := s.articleRepo.FindByID(id)
 	if err != nil {
 		return nil, utils.ErrArticleNotFound
 	}
-	return article, nil
+	return utils.ConvertArticleToDTO(article), nil
 }
 
 func (s *articleService) GetAll(page, pageSize int) (*dto.ArticlePageDTO, error) {

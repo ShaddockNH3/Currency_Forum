@@ -15,6 +15,7 @@ type Container struct {
 	ExchangeRateRepository repository.ExchangeRateRepository
 	WalletRepository       repository.WalletRepository
 	BillRepository         repository.BillRepository
+	CommentRepository      repository.CommentRepository
 	// Services
 	UserService         service.UserService
 	ArticleService      service.ArticleService
@@ -23,6 +24,7 @@ type Container struct {
 	LikeService         service.LikeService
 	WalletService       service.WalletService
 	BillService         service.BillService
+	CommentService      service.CommentService
 	// Controllers
 	AuthController         *controllers.AuthController
 	ArticleController      *controllers.ArticleController
@@ -31,6 +33,7 @@ type Container struct {
 	LikeController         *controllers.LikeController
 	WalletController       *controllers.WalletController
 	BillController         *controllers.BillController
+	CommentController      *controllers.CommentController
 }
 
 // NewContainer 创建新的依赖注入容器
@@ -56,6 +59,7 @@ func (c *Container) initRepositories() {
 	c.ExchangeRateRepository = repository.NewExchangeRateRepository(global.Db)
 	c.WalletRepository = repository.NewWalletRepository(global.Db)
 	c.BillRepository = repository.NewBillRepository(global.Db)
+	c.CommentRepository = repository.NewCommentRepository(global.Db)
 }
 
 // initServices 初始化所有Service
@@ -67,6 +71,7 @@ func (c *Container) initServices() {
 	c.LikeService = service.NewLikeService(global.RedisDB)
 	c.BillService = service.NewBillService(c.BillRepository)
 	c.WalletService = service.NewWalletService(c.WalletRepository, c.UserRepository, c.ExchangeRateRepository, c.BillRepository)
+	c.CommentService = service.NewCommentService(c.CommentRepository, c.UserRepository, c.ArticleRepository)
 }
 
 // initControllers 初始化所有Controller
@@ -76,8 +81,9 @@ func (c *Container) initControllers() {
 	c.ExchangeRateController = controllers.NewExchangeRateController(c.ExchangeRateService)
 	c.HomePageController = controllers.NewHomePageController(c.HomePageService)
 	c.LikeController = controllers.NewLikeController(c.LikeService)
-	c.WalletController = controllers.NewWalletController(c.WalletService)
+	c.WalletController = controllers.NewWalletController(c.WalletService, c.UserService)
 	c.BillController = controllers.NewBillController(c.BillService, c.WalletService)
+	c.CommentController = controllers.NewCommentController(c.CommentService)
 }
 
 // GetControllers 获取所有Controller

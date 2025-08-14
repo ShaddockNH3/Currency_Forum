@@ -6,13 +6,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Config struct{
-	App struct{
+type Config struct {
+	App struct {
 		Name string
 		Port string
 	}
-	Database struct{
-		Dsn string
+	Database struct {
+		Dsn          string
 		MaxIdleConns int
 		MaxOpenConns int
 	}
@@ -20,22 +20,21 @@ type Config struct{
 
 var AppConfig *Config
 
-func InitConfig(){
+func InitConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yml")
 	viper.AddConfigPath("./config")
 
-	if err:=viper.ReadInConfig();err!=nil{
-		log.Fatalf("Error reading config file: %v",err)
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatalf("Error reading config file: %v", err)
 	}
 
-	AppConfig=&Config{}
+	AppConfig = &Config{}
 
-	if err:=viper.Unmarshal(AppConfig);err!=nil{
-		log.Fatalf("Unable to decode into struct: %v",err)
+	if err := viper.Unmarshal(AppConfig); err != nil {
+		log.Fatalf("Unable to decode into struct: %v", err)
 	}
 
 	initDB()
 	initRedis()
 }
-

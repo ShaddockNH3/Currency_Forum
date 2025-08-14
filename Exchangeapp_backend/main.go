@@ -12,6 +12,8 @@ import (
 	"exchangeapp/global"
 	"exchangeapp/models"
 	"exchangeapp/router"
+
+	"github.com/pkg/browser"
 )
 
 func main() {
@@ -26,6 +28,7 @@ func main() {
 		&models.Wallet{},
 		&models.WalletBalance{},
 		&models.Bill{},
+		&models.Comment{},
 	); err != nil {
 		log.Fatalf("数据库迁移失败: %v", err)
 	}
@@ -49,6 +52,25 @@ func main() {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()
+	
+	go func() {
+        time.Sleep(2 * time.Second) 
+        frontendURL := "http://localhost:5173"
+
+        log.Println("正在检查前端服务状态 at", frontendURL)
+        resp, err := http.Get(frontendURL)
+
+        if err == nil && resp.StatusCode == http.StatusOK {
+            log.Printf("前端服务已准备就绪，正在打开浏览器...")
+            browser.OpenURL(frontendURL)
+        } else {
+            log.Printf("未检测到前端服务在 %s 运行，请手动启动前端后访问。", frontendURL)
+        }
+
+        if resp != nil {
+            resp.Body.Close()
+        }
+    }()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)

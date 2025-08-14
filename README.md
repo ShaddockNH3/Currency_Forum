@@ -5,18 +5,106 @@
 ## 📋 目录
 
 - [项目概述](#项目概述)
+- [快速开始](#快速开始)
 - [开发历程](#开发历程)
 - [技术栈](#技术栈)
 - [架构设计](#架构设计)
 - [功能特性](#功能特性)
 - [项目结构](#项目结构)
 - [API文档](#api文档)
+- [开发安装](#开发安装)
 - [开发计划](#开发计划)
 - [贡献指南](#贡献指南)
+
+---
 
 ## 🎯 项目概述
 
 Currency Forum 是一个专注于货币话题讨论的论坛系统，集成了用户管理、内容发布、钱包系统和汇率查询等功能。项目采用现代化的三层架构设计，确保代码的可维护性和可扩展性。
+
+## 快速开始
+
+## 🔧 本地开发指南 (Local Development Guide)
+
+欢迎为本项目贡献代码或进行二次开发！请遵循以下步骤，在你的本地计算机上将项目成功运行起来。
+
+### 1. 先决条件 (Prerequisites)
+
+在开始之前，请确保你的电脑上已经安装并正确配置了以下软件：
+
+* **Go**: 版本 `1.20` 或更高
+* **Node.js**: 版本 `18.0` (LTS) 或更高
+* **MySQL**: 版本 `8.0` 或更高
+* **Redis**
+
+### 2. 获取代码 (Get the Code)
+
+首先，使用 `git` 将本仓库克隆到你的本地：
+```bash
+git clone [https://github.com/ShaddockNH3/Currency_Forum.git](https://github.com/ShaddockNH3/Currency_Forum.git)
+cd Currency_Forum
+```
+
+### 3. 后端启动流程 (Backend Setup)
+
+1.  **进入后端目录**:
+    ```bash
+    cd Exchangeapp_backend
+    ```
+
+2.  **配置 `config.yml`**:
+    这是最关键的一步！请在 `config/` 目录下修改config.yaml文件。
+    ```yaml
+    app:
+      name: CurrencyExchangeApp
+      port: :3000
+
+    database:
+      dsn: 用户名:密码@tcp(127.0.0.1:3306)/你的数据库名?charset=utf8mb4&parseTime=True&loc=Local
+    
+    redis:
+      addr: "localhost:6379"
+      password: "" # 如果你的 Redis 有密码
+      db: 0
+    ```
+    **请务必**将 `dsn` 中的数据库连接信息，替换成你自己的本地设置！
+
+3.  **安装依赖**:
+    Go Modules 会帮我们处理好一切。
+    ```bash
+    go mod tidy
+    ```
+
+4.  **启动后端服务**:
+    ```bash
+    go run .
+    ```
+    当你看到类似 `Server is running at :3000` 的日志时，就说明后端已经成功启动啦！
+
+### 4. 前端启动流程 (Frontend Setup)
+
+1.  **打开一个新的终端**，然后进入前端目录:
+    ```bash
+    cd Exchangeapp_frontend
+    ```
+
+2.  **安装依赖**:
+    (如果你是第一次运行，或者 `package.json` 有更新，就需要执行这一步)
+    ```bash
+    npm install
+    ```
+
+3.  **启动前端开发服务**:
+    ```bash
+    npm run dev
+    ```
+    当你看到 Vite 打印出类似 `> Local: http://localhost:5173/` 的信息时，就说明前端也成功启动啦！
+
+### 5. 开始探索！
+
+现在，你的浏览器应该会自动打开 `http://localhost:5173`，或者你可以手动访问它。恭喜你，整个应用已经在你的本地完美地运行起来了！
+
+---
 
 ## 🚀 开发历程
 
@@ -38,11 +126,17 @@ Currency Forum 是一个专注于货币话题讨论的论坛系统，集成了�
 - 🔧 **依赖注入**：实现完整的依赖注入容器
 - 🛡️ **错误处理**：建立统一的错误处理机制
 
-### 第四阶段：钱包系统
+### 第四阶段：钱包系统 ✅
 - 💰 **完整钱包系统**：实现多币种钱包管理
-- 🔄 **交易功能**：充值、提现、货币兑换全部到位
+- 🔄 **交易功能**：充值、提现、货币兑换、转账全部到位
 - 📊 **账单系统**：完整的交易记录和查询功能
 - 🏦 **余额管理**：支持多币种余额实时查询
+
+### 第五阶段：评论系统完成 ✅
+- 💬 **完整评论系统**：支持顶级评论和多层回复
+- 👥 **用户体验**：评论作者信息展示，实时创建时间
+- 📄 **分页查询**：支持评论列表分页，性能优化
+- 🛡️ **权限控制**：用户删除自己评论，管理员全局管理
 
 ## 🛠 技术栈
 
@@ -54,7 +148,7 @@ Currency Forum 是一个专注于货币话题讨论的论坛系统，集成了�
 - **认证**: JWT (JSON Web Token)
 - **密码**: bcrypt 加密
 
-### 前端技术（原项目使用）
+### 前端技术（基于原项目使用Cursor跑的）
 - **框架**: Vue.js 3
 - **构建工具**: Vite
 - **HTTP客户端**: Axios
@@ -123,8 +217,10 @@ Currency Forum 是一个专注于货币话题讨论的论坛系统，集成了�
 - [x] 文章列表查看
 - [x] 文章详情展示
 - [x] 文章点赞功能
-- [ ] 评论系统 (开发中)
-- [ ] 评论回复 (计划中)
+- [x] 评论系统
+- [x] 评论回复功能
+- [x] 评论分页查询
+- [x] 评论权限控制
 - [ ] 高级点赞系统 (计划中)
 
 ### 💰 钱包系统
@@ -137,8 +233,7 @@ Currency Forum 是一个专注于货币话题讨论的论坛系统，集成了�
 - [x] 汇率兑换功能
 - [x] 账单记录与查询
 - [x] 余额查询（全部/单币种）
-- [ ] P2P转账 (计划中)
-- [ ] 转账手续费 (计划中)
+- [x] 转账功能
 
 ### 📊 汇率服务
 - [x] 实时汇率查询
@@ -148,7 +243,7 @@ Currency Forum 是一个专注于货币话题讨论的论坛系统，集成了�
 ## 📁 项目结构
 
 ```
-Exchangeapp_backend/
+Exchangeapp_backend
 ├── 📁 config/
 │   ├── 🐹 config.go
 │   ├── ⚙️ config.yml
@@ -158,6 +253,7 @@ Exchangeapp_backend/
 │   ├── 🐹 article_controllers.go
 │   ├── 🐹 auth_controllers.go
 │   ├── 🐹 bill_controller.go
+│   ├── 🐹 comment_controllers.go
 │   ├── 🐹 exchange_rate_controllers.go
 │   ├── 🐹 homepage_controller.go
 │   ├── 🐹 like_controllers.go
@@ -167,26 +263,28 @@ Exchangeapp_backend/
 ├── 📁 dto/
 │   ├── 🐹 article_dto.go
 │   ├── 🐹 bill_dto.go
+│   ├── 🐹 comment_dto.go
 │   ├── 🐹 homepage_dto.go
 │   └── 🐹 wallet_dto.go
 ├── 📁 global/
 │   └── 🐹 global.go
 ├── 📁 input/
 │   ├── 🐹 article_input.go
+│   ├── 🐹 comment_input.go
 │   ├── 🐹 homepage_input.go
-│   ├── 🐹 wallet.go
 │   └── 🐹 wallet_input.go
 ├── 📁 middlewares/
 │   └── 🐹 auth_middleware.go
 ├── 📁 models/
 │   ├── 🐹 article.go
-│   ├── 🐹 bill.go
+│   ├── 🐹 comment.go
 │   ├── 🐹 exchange_rate.go
 │   ├── 🐹 user.go
 │   └── 🐹 wallet.go
 ├── 📁 repository/
 │   ├── 🐹 article_repository.go
 │   ├── 🐹 bill_repository.go
+│   ├── 🐹 comment_repository.go
 │   ├── 🐹 exchange_rate_repository.go
 │   ├── 🐹 user_repository.go
 │   └── 🐹 wallet_repsitory.go
@@ -195,6 +293,7 @@ Exchangeapp_backend/
 ├── 📁 service/
 │   ├── 🐹 article_service.go
 │   ├── 🐹 bill_service.go
+│   ├── 🐹 conmment_service.go
 │   ├── 🐹 exchange_rate_service.go
 │   ├── 🐹 homepage_service.go
 │   ├── 🐹 like_service.go
@@ -210,8 +309,8 @@ Exchangeapp_backend/
 │   └── 🐹 wallet.go
 ├── 🐹 go.mod
 ├── 🐹 go.sum
-├── ⚙️ main.exe
-└── 🐹 main.go
+├── 🐹 main.go
+└── 📝 完整API测试用例.md
 ```
 
 ## 📚 API文档
@@ -264,6 +363,15 @@ GET /api/users/:username   # 获取用户主页
 PUT /api/users/:username   # 更新用户资料
 ```
 
+### 评论系统
+```http
+POST /api/comments                    # 创建评论（顶级评论或回复）
+GET  /api/articles/:id/comments       # 获取文章评论（支持分页）
+GET  /api/comments/:id/replies        # 获取评论的回复
+DELETE /api/comments/:id              # 删除单个评论
+DELETE /api/articles/:id/comments     # 删除文章所有评论（作者+管理员）
+```
+
 ## 🎯 开发计划
 
 ### 近期目标 (v1.1)
@@ -276,20 +384,21 @@ PUT /api/users/:username   # 更新用户资料
 - [x] **汇率兑换系统** ✅ (已完成)
   - [x] 实时汇率兑换
   - [x] 兑换历史记录
-  - [ ] 兑换手续费 (计划中)
 
-- [ ] **P2P转账系统**
-  - [ ] 用户间转账
-  - [ ] 转账记录追踪
-  - [ ] 转账手续费计算
+- [x] **P2P转账系统**
+  - [x] 用户间转账
+  - [x] 转账记录追踪
 
 ### 中期目标 (v1.2)
-- [ ] **评论系统**
-  - [ ] 文章评论功能
-  - [ ] 评论回复功能
-  - [ ] 评论点赞系统
+- [x] **评论系统** ✅ (已完成)
+  - [x] 文章评论功能
+  - [x] 评论回复功能
+  - [x] 评论分页查询
+  - [x] 评论权限控制
+  - [ ] 评论点赞系统 (计划中)
 
-- [ ] **高级点赞系统**
+### 长期目标 (v2.0)
+  - [ ] **高级点赞系统**
   - [ ] 防重复点赞
   - [ ] 点赞数据统计
   - [ ] 点赞用户列表
@@ -298,9 +407,6 @@ PUT /api/users/:username   # 更新用户资料
   - [ ] 热点数据缓存
   - [ ] 会话管理优化
   - [ ] 性能提升
-
-### 长期目标 (v2.0)
-    暂无
 
 ## 🔧 开发规范
 
@@ -321,4 +427,4 @@ PUT /api/users/:username   # 更新用户资料
 
 ---
 
-**项目状态**: 🎉 核心功能完成，钱包系统全面上线
+**项目状态**: 🎉 核心功能完成，钱包系统+评论系统全面上线

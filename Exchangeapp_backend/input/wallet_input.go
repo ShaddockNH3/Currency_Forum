@@ -63,3 +63,12 @@ type ExchangeInput struct {
 	ToCurrency   string `json:"to_currency" binding:"required"`
 	Description  string `json:"description"`
 }
+
+// TransferInput 转账输入模型
+type TransferInput struct {
+	ToUserID     uint   `json:"to_user_id"`
+	ToUsername   string `json:"to_username"`
+	Amount       string `json:"amount" binding:"required"`
+	CurrencyCode string `json:"currency_code" binding:"required"`
+	Description  string `json:"description"`
+}

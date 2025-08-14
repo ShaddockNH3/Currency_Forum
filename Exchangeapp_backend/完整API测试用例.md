@@ -307,6 +307,132 @@ Authorization: Bearer {USER_TOKEN}
 
 ---
 
+## 💬 评论系统API测试
+
+### 12.1 用户1对文章1发表顶级评论
+```http
+POST http://localhost:3000/api/comments
+Authorization: Bearer {USER_TOKEN}
+Content-Type: application/json
+
+{
+  "article_id": 1,
+  "content": "这篇关于Bitcoin的文章写得很好！我认为技术分析部分特别有用。"
+}
+```
+
+### 12.2 用户2对文章1发表另一条顶级评论
+```http
+POST http://localhost:3000/api/comments
+Authorization: Bearer {USER2_TOKEN}
+Content-Type: application/json
+
+{
+  "article_id": 1,
+  "content": "同意楼上的观点，我也是通过技术分析获得了不错的收益。"
+}
+```
+
+### 12.3 管理员对文章2发表评论
+```http
+POST http://localhost:3000/api/comments
+Authorization: Bearer {ADMIN_TOKEN}
+Content-Type: application/json
+
+{
+  "article_id": 2,
+  "content": "感谢分享外汇交易经验，这对新手很有帮助。"
+}
+```
+
+### 12.4 用户1回复用户2的评论（子评论）
+```http
+POST http://localhost:3000/api/comments
+Authorization: Bearer {USER_TOKEN}
+Content-Type: application/json
+
+{
+  "article_id": 1,
+  "parent_id": 2,
+  "content": "是的，坚持技术分析确实能提高成功率。你主要用哪些指标？"
+}
+```
+
+### 12.5 用户2回复用户1的回复
+```http
+POST http://localhost:3000/api/comments
+Authorization: Bearer {USER2_TOKEN}
+Content-Type: application/json
+
+{
+  "article_id": 1,
+  "parent_id": 4,
+  "content": "我主要使用MACD和RSI，配合布林带使用。"
+}
+```
+
+### 12.6 获取文章1的所有评论（不分页）
+```http
+GET http://localhost:3000/api/articles/1/comments
+Authorization: Bearer {USER_TOKEN}
+```
+
+### 12.7 获取文章1的评论（分页查询，第1页）
+```http
+GET http://localhost:3000/api/articles/1/comments?page=1&page_size=3
+Authorization: Bearer {USER_TOKEN}
+```
+
+### 12.8 获取文章1的评论（分页查询，第2页）
+```http
+GET http://localhost:3000/api/articles/1/comments?page=2&page_size=3
+Authorization: Bearer {USER_TOKEN}
+```
+
+### 12.9 获取评论2的所有回复
+```http
+GET http://localhost:3000/api/comments/2/replies
+Authorization: Bearer {USER_TOKEN}
+```
+
+### 12.10 用户1删除自己的评论 ✅
+```http
+DELETE http://localhost:3000/api/comments/1
+Authorization: Bearer {USER_TOKEN}
+```
+
+### 12.11 用户2尝试删除用户1的评论 ❌（应该返回403）
+```http
+DELETE http://localhost:3000/api/comments/4
+Authorization: Bearer {USER2_TOKEN}
+```
+
+### 12.12 管理员删除任意评论 ✅
+```http
+DELETE http://localhost:3000/api/comments/2
+Authorization: Bearer {ADMIN_TOKEN}
+```
+
+### 12.13 文章作者删除文章下的所有评论 ✅
+```http
+DELETE http://localhost:3000/api/articles/1/comments
+Authorization: Bearer {USER_TOKEN}
+```
+
+### 12.14 普通用户尝试删除不是自己文章的所有评论 ❌
+```http
+DELETE http://localhost:3000/api/articles/2/comments
+Authorization: Bearer {USER_TOKEN}
+```
+
+### 12.15 获取文章2的评论（验证评论仍然存在）
+```http
+GET http://localhost:3000/api/articles/2/comments
+Authorization: Bearer {USER2_TOKEN}
+```
+
+---
+
 ## 👤 用户资料管理API测试
 
 ### 5.1 获取用户1主页
@@ -695,6 +821,9 @@ Content-Type: application/json
 - ✅ 货币兑换功能正常
 - ✅ 账单记录完整准确
 - ✅ 分页查询正常工作
+- ✅ 评论系统完整功能
+- ✅ 评论回复层级支持
+- ✅ 评论分页查询
 
 ### 数据验证
 - ✅ 密码强度验证

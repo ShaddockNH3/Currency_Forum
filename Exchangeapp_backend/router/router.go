@@ -12,7 +12,7 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:3000", "http://localhost:8080"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -48,6 +48,13 @@ func SetupRouter() *gin.Engine {
 		api.POST("/articles/:id/like", container.LikeController.LikeArticle)
 		api.GET("/articles/:id/like", container.LikeController.GetArticleLikes)
 
+		// 评论功能
+		api.POST("/comments", container.CommentController.CreateComment)                           // 创建评论
+		api.GET("/articles/:id/comments", container.CommentController.GetCommentsByArticleID)      // 获取文章评论
+		api.GET("/comments/:id/replies", container.CommentController.GetCommentsByParentID)        // 获取评论回复
+		api.DELETE("/comments/:id", container.CommentController.DeleteCommentByID)                 // 删除单个评论
+		api.DELETE("/articles/:id/comments", container.CommentController.DeleteCommentByArticleID) // 删除文章所有评论
+
 		api.GET("/users/:username", container.HomePageController.GetHomePage)
 		api.PUT("/users/:username", container.HomePageController.UpdateUserProfile)
 	}
@@ -69,14 +76,11 @@ func SetupRouter() *gin.Engine {
 		wallet.POST("/deposit", container.WalletController.Deposit)   // 充值
 		wallet.POST("/withdraw", container.WalletController.Withdraw) // 取出
 		wallet.POST("/exchange", container.WalletController.Exchange) // 货币兑换
+		wallet.POST("/transfer", container.WalletController.Transfer) // 转账
 
 		// 账单相关操作 - 已实现
 		wallet.GET("/bills", container.BillController.GetBills)        // 获取账单列表
 		wallet.GET("/bills/:id", container.BillController.GetBillByID) // 获取特定账单
-
-		// TODO: 以下路由需要实现 TransactionController（转账、P2P功能）
-		// wallet.POST("/transfer", container.TransactionController.Transfer)  // 转账
-		// wallet.POST("/p2p", container.TransactionController.P2P)           // P2P交易
 	}
 
 	return r

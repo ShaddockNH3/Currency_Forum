@@ -15,11 +15,15 @@ import (
 // WalletController 钱包控制器，处理钱包相关的HTTP请求
 type WalletController struct {
 	walletService service.WalletService
+	userService   service.UserService
 }
 
 // NewWalletController 创建钱包控制器实例
-func NewWalletController(walletService service.WalletService) *WalletController {
-	return &WalletController{walletService: walletService}
+func NewWalletController(walletService service.WalletService, userService service.UserService) *WalletController {
+	return &WalletController{
+		walletService: walletService,
+		userService:   userService,
+	}
 }
 
 // CreateWallet 处理创建钱包请求
@@ -344,5 +348,62 @@ func (c *WalletController) Exchange(ctx *gin.Context) {
 	}
 
 	log.Printf("[Wallet] 货币兑换成功，用户ID: %d", userID)
+	ctx.JSON(http.StatusOK, response)
+}
+
+// Transfer 处理转账请求
+func (c *WalletController) Transfer(ctx *gin.Context) {
+	var transferInput input.TransferInput
+
+	log.Printf("[Wallet] 开始处理转账请求")
+
+	// 绑定JSON请求数据
+	if err := ctx.ShouldBindJSON(&transferInput); err != nil {
+		log.Printf("[Wallet] 转账请求数据绑定失败: %v", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 从JWT中获取用户信息
+	userID, _, _, err := utils.GetUserInfoFromContext(ctx)
+	if err != nil {
+		log.Printf("[Wallet] 获取用户信息失败: %v", err)
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+		return
+	}
+
+	// 如果提供了用户名而不是用户ID，需要先查找用户ID
+	if transferInput.ToUserID == 0 && transferInput.ToUsername != "" {
+		log.Printf("[Wallet] 通过用户名查找用户ID: %s", transferInput.ToUsername)
+
+		user, err := c.userService.GetByUsername(transferInput.ToUsername)
+		if err != nil {
+			log.Printf("[Wallet] 用户名不存在: %s", transferInput.ToUsername)
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "用户名不存在"})
+			return
+		}
+
+		transferInput.ToUserID = user.ID
+		log.Printf("[Wallet] 找到用户ID: %s -> %d", transferInput.ToUsername, user.ID)
+	}
+
+	if transferInput.ToUserID == 0 {
+		log.Printf("[Wallet] 缺少收款人信息")
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请提供收款人用户ID或用户名"})
+		return
+	}
+
+	log.Printf("[Wallet] 调用服务层处理转账，用户ID: %d -> 用户ID: %d，金额: %s %s",
+		userID, transferInput.ToUserID, transferInput.Amount, transferInput.CurrencyCode)
+
+	// 调用服务层处理转账业务逻辑
+	response, err := c.walletService.Transfer(uint(userID), &transferInput)
+	if err != nil {
+		log.Printf("[Wallet] 服务层转账失败: %v", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Printf("[Wallet] 转账成功，用户ID: %d", userID)
 	ctx.JSON(http.StatusOK, response)
 }

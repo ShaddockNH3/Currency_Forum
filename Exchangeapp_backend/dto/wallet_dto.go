@@ -60,3 +60,14 @@ type ExchangeResultDTO struct {
 	UpdatedBalances []WalletBalanceDTO `json:"updated_balances"`
 	CreatedAt       time.Time          `json:"created_at"`
 }
+
+type TransferResultDTO struct {
+	TransactionID   string             `json:"transaction_id"`
+	FromUserID      uint               `json:"from_user_id"`
+	ToUserID        uint               `json:"to_user_id"`
+	Amount          decimal.Decimal    `json:"amount"`
+	CurrencyCode    string             `json:"currency_code"`
+	Status          string             `json:"status"`
+	Message         string             `json:"message"`
+	CreatedAt       time.Time          `json:"created_at"`
+}

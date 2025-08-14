@@ -30,3 +30,23 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Release directory and build artifacts
+release/
+currency-forum
+currency-forum.exe
+currency-forum-*
+
+# Frontend build artifacts
+Exchangeapp_frontend/dist/
+Exchangeapp_frontend/node_modules/
+
+# Logs
+*.log
+
+# Database files
+*.db
+*.sqlite
+
+# Config files (if containing sensitive data)
+# config/config.yml

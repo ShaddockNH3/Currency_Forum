@@ -24,10 +24,11 @@ type WalletService interface {
 	GetBalanceByWalletIDAndCurrency(walletID uint, currencyCode string) (*dto.WalletBalanceDTO, error)
 	HasWalletBalance(walletID uint, currencyCode string) (bool, error)
 
-	// 新增交易功能
+	// 交易功能
 	Deposit(userID uint, input *input.DepositInput) (*dto.TransactionResultDTO, error)
 	Withdraw(userID uint, input *input.WithdrawInput) (*dto.TransactionResultDTO, error)
 	Exchange(userID uint, input *input.ExchangeInput) (*dto.ExchangeResultDTO, error)
+	Transfer(userID uint, input *input.TransferInput) (*dto.TransferResultDTO, error)
 }
 
 type walletService struct {
@@ -602,6 +603,116 @@ func (s *walletService) Exchange(userID uint, input *input.ExchangeInput) (*dto.
 		Message:         "货币兑换成功",
 		UpdatedBalances: balanceDTOs,
 		CreatedAt:       time.Now(),
+	}, nil
+}
+
+// Transfer 转账功能
+func (s *walletService) Transfer(userID uint, input *input.TransferInput) (*dto.TransferResultDTO, error) {
+	log.Printf("[WalletService] 开始处理转账，从用户ID: %d，到用户ID: %d，金额: %s %s",
+		userID, input.ToUserID, input.Amount, input.CurrencyCode)
+
+	// 基本验证：不能给自己转账
+	if userID == input.ToUserID {
+		return nil, errors.New("不能给自己转账")
+	}
+
+	// 解析转账金额
+	amount, err := decimal.NewFromString(input.Amount)
+	if err != nil || amount.LessThanOrEqual(decimal.Zero) {
+		log.Printf("[WalletService] 金额格式错误或金额必须大于0: %s", input.Amount)
+		return nil, errors.New("金额格式错误或金额必须大于0")
+	}
+
+	// 获取转出方钱包ID
+	fromWalletID, err := s.GetWalletIDByUserID(userID)
+	if err != nil {
+		log.Printf("[WalletService] 获取转出方钱包ID失败: %v", err)
+		return nil, errors.New("转出方钱包不存在")
+	}
+
+	// 获取转入方钱包ID
+	toWalletID, err := s.GetWalletIDByUserID(input.ToUserID)
+	if err != nil {
+		log.Printf("[WalletService] 获取转入方钱包ID失败: %v", err)
+		return nil, errors.New("转入方钱包不存在")
+	}
+
+	// 获取转出方余额
+	fromBalance, err := s.walletRepo.FindBalanceByWalletIDAndCurrency(fromWalletID, input.CurrencyCode)
+	if err != nil {
+		log.Printf("[WalletService] 转出方%s余额不存在", input.CurrencyCode)
+		return nil, errors.New("余额不足，该币种余额不存在")
+	}
+
+	// 检查余额是否充足
+	if fromBalance.Amount.LessThan(amount) {
+		log.Printf("[WalletService] 余额不足，当前余额: %s，尝试转账: %s",
+			fromBalance.Amount.String(), amount.String())
+		return nil, errors.New("余额不足")
+	}
+
+	// 扣减转出方余额
+	fromBalance.Amount = fromBalance.Amount.Sub(amount)
+	if err := s.walletRepo.UpdateBalance(fromBalance); err != nil {
+		log.Printf("[WalletService] 更新转出方余额失败: %v", err)
+		return nil, err
+	}
+
+	// 获取或创建转入方余额
+	toBalance, err := s.walletRepo.FindBalanceByWalletIDAndCurrency(toWalletID, input.CurrencyCode)
+	if err != nil {
+		// 转入方该币种余额不存在，创建新的余额记录
+		log.Printf("[WalletService] 转入方%s余额不存在，创建新余额", input.CurrencyCode)
+		toBalance = &models.WalletBalance{
+			WalletID:     toWalletID,
+			CurrencyCode: input.CurrencyCode,
+			Amount:       amount,
+		}
+		if err := s.walletRepo.CreateBalance(toBalance); err != nil {
+			log.Printf("[WalletService] 创建转入方余额失败: %v", err)
+			// 回滚转出方余额
+			fromBalance.Amount = fromBalance.Amount.Add(amount)
+			s.walletRepo.UpdateBalance(fromBalance)
+			return nil, err
+		}
+	} else {
+		// 转入方余额存在，增加金额
+		toBalance.Amount = toBalance.Amount.Add(amount)
+		if err := s.walletRepo.UpdateBalance(toBalance); err != nil {
+			log.Printf("[WalletService] 更新转入方余额失败: %v", err)
+			// 回滚转出方余额
+			fromBalance.Amount = fromBalance.Amount.Add(amount)
+			s.walletRepo.UpdateBalance(fromBalance)
+			return nil, err
+		}
+	}
+
+	// 创建转账账单记录
+	description := input.Description
+	if description == "" {
+		description = fmt.Sprintf("转账给用户ID: %d", input.ToUserID)
+	}
+
+	// 转出方账单
+	s.createBill(fromWalletID, "transfer_out", amount, input.CurrencyCode,
+		fmt.Sprintf("转出: %s", description))
+
+	// 转入方账单
+	s.createBill(toWalletID, "transfer_in", amount, input.CurrencyCode,
+		fmt.Sprintf("转入: %s", description))
+
+	log.Printf("[WalletService] 转账成功，从用户ID: %d 到用户ID: %d，金额: %s %s",
+		userID, input.ToUserID, amount.String(), input.CurrencyCode)
+
+	return &dto.TransferResultDTO{
+		TransactionID: generateTransactionID(),
+		FromUserID:    userID,
+		ToUserID:      input.ToUserID,
+		Amount:        amount,
+		CurrencyCode:  input.CurrencyCode,
+		Status:        "success",
+		Message:       "转账成功",
+		CreatedAt:     time.Now(),
 	}, nil
 }
 

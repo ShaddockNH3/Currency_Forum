@@ -10,11 +10,14 @@ func ConvertArticlesToDTOs(articles []models.Article) []dto.ArticleDTO {
 	var articleDTOs []dto.ArticleDTO
 	for _, article := range articles {
 		articleDTOs = append(articleDTOs, dto.ArticleDTO{
-			Title:    article.Title,
-			Content:  article.Content,
-			Preview:  article.Preview,
-			AuthorID: int(article.AuthorID),
-			Author:   article.Author,
+			ID:        article.ID,
+			Title:     article.Title,
+			Content:   article.Content,
+			Preview:   article.Preview,
+			AuthorID:  int(article.AuthorID),
+			Author:    article.Author,
+			CreatedAt: article.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt: article.UpdatedAt.Format("2006-01-02 15:04:05"),
 		})
 	}
 	return articleDTOs
@@ -27,11 +30,14 @@ func ConvertArticleToDTO(article *models.Article) *dto.ArticleDTO {
 	}
 
 	return &dto.ArticleDTO{
-		Title:    article.Title,
-		Content:  article.Content,
-		Preview:  article.Preview,
-		AuthorID: int(article.AuthorID),
-		Author:   article.Author,
+		ID:        article.ID,
+		Title:     article.Title,
+		Content:   article.Content,
+		Preview:   article.Preview,
+		AuthorID:  int(article.AuthorID),
+		Author:    article.Author,
+		CreatedAt: article.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt: article.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
 }
 
