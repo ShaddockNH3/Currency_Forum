@@ -273,9 +273,11 @@ const resetArticleForm = () => {
 
 // 查看文章
 const viewArticle = (article: ArticleDTO) => {
-  // 这里需要根据实际的文章ID来跳转
-  // 暂时使用标题作为标识
-  router.push({ name: 'NewsDetail', params: { id: article.title } });
+  if (!article.id) {
+    ElMessage.error('文章ID不存在，无法查看');
+    return;
+  }
+  router.push({ name: 'NewsDetail', params: { id: article.id.toString() } });
 };
 
 // 编辑文章

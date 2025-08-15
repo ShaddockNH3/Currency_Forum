@@ -54,26 +54,26 @@
           <span>交易记录</span>
         </template>
         <el-table :data="bills" style="width: 100%">
-          <el-table-column prop="TransactionType" label="类型" width="100">
+          <el-table-column prop="transaction_type" label="类型" width="100">
             <template #default="scope">
-              <el-tag :type="getTransactionTypeColor(scope.row.TransactionType)">
-                {{ getTransactionTypeName(scope.row.TransactionType) }}
+              <el-tag :type="getTransactionTypeColor(scope.row.transaction_type)">
+                {{ getTransactionTypeName(scope.row.transaction_type) }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="Amount" label="金额" width="120" />
-          <el-table-column prop="CurrencyCode" label="货币" width="80" />
-          <el-table-column prop="Description" label="描述" />
-          <el-table-column prop="Status" label="状态" width="80">
+          <el-table-column prop="amount" label="金额" width="120" />
+          <el-table-column prop="currency_code" label="货币" width="80" />
+          <el-table-column prop="description" label="描述" />
+          <el-table-column prop="status" label="状态" width="80">
             <template #default="scope">
-              <el-tag :type="scope.row.Status === 'completed' ? 'success' : 'warning'">
-                {{ scope.row.Status === 'completed' ? '完成' : '处理中' }}
+              <el-tag :type="scope.row.status === 'completed' ? 'success' : 'warning'">
+                {{ scope.row.status === 'completed' ? '完成' : '处理中' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="CreatedAt" label="时间" width="180">
+          <el-table-column prop="created_at" label="时间" width="180">
             <template #default="scope">
-              {{ formatDate(scope.row.CreatedAt) }}
+              {{ formatDate(scope.row.created_at) }}
             </template>
           </el-table-column>
         </el-table>
@@ -278,10 +278,19 @@ const fetchWallet = async () => {
 // 获取账单
 const fetchBills = async () => {
   try {
-    const response = await axios.get<BillDTO[]>('/wallets/bills');
-    bills.value = response.data || [];
+    const response = await axios.get<any>('/wallets/bills');
+    console.log('账单响应数据:', response.data);
+    // 后端返回的是分页数据，需要取出bills数组
+    if (response.data && response.data.bills) {
+      bills.value = response.data.bills;
+    } else if (Array.isArray(response.data)) {
+      bills.value = response.data;
+    } else {
+      bills.value = [];
+    }
   } catch (error) {
     console.error('Failed to load bills:', error);
+    ElMessage.error('加载交易记录失败');
   }
 };
 
@@ -423,7 +432,13 @@ const getTransactionTypeName = (type: string) => {
     deposit: '充值',
     withdraw: '取出',
     exchange: '兑换',
-    transfer: '转账'
+    transfer: '转账',
+    wallet_create: '创建钱包',
+    wallet_update: '更新钱包',
+    exchange_out: '兑换支出',
+    exchange_in: '兑换收入',
+    transfer_out: '转出',
+    transfer_in: '转入'
   };
   return typeMap[type] || type;
 };
@@ -433,7 +448,13 @@ const getTransactionTypeColor = (type: string) => {
     deposit: 'success',
     withdraw: 'warning',
     exchange: 'primary',
-    transfer: 'info'
+    transfer: 'info',
+    wallet_create: 'primary',
+    wallet_update: 'primary',
+    exchange_out: 'warning',
+    exchange_in: 'success',
+    transfer_out: 'warning',
+    transfer_in: 'success'
   };
   return colorMap[type] || 'default';
 };

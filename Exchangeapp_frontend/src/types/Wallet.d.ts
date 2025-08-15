@@ -23,16 +23,16 @@ export interface WalletDTO {
 }
 
 export interface BillDTO {
-    ID: number;
-    CreatedAt: string;
-    UpdatedAt: string;
-    WalletID: number;
-    TransactionType: string;
-    Amount: string;
-    CurrencyCode: string;
-    RelatedWalletID: number;
-    Description: string;
-    Status: string;
+    id: number;
+    created_at: string;
+    updated_at: string;
+    wallet_id: number;
+    transaction_type: string;
+    amount: string;
+    currency_code: string;
+    related_wallet_id: number;
+    description: string;
+    status: string;
 }
 
 export interface TransactionResultDTO {

@@ -66,6 +66,7 @@
               
               <!-- 回复输入框 -->
               <div v-if="replyingTo === comment.id" class="reply-form">
+                <div class="reply-target">回复 @{{ comment.username }}:</div>
                 <el-input
                   v-model="replyContent"
                   type="textarea"
@@ -88,17 +89,41 @@
                   <div class="reply-header">
                     <span class="reply-author">{{ reply.username }}</span>
                     <span class="reply-date">{{ formatDate(reply.created_at) }}</span>
-                    <el-button 
-                      v-if="canDeleteComment(reply)" 
-                      size="small" 
-                      type="text" 
-                      class="delete-btn"
-                      @click="deleteComment(reply.id)"
-                    >
-                      删除
-                    </el-button>
+                    <div class="reply-actions">
+                      <el-button size="small" type="text" @click="startReply(reply)">
+                        回复
+                      </el-button>
+                      <el-button 
+                        v-if="canDeleteComment(reply)" 
+                        size="small" 
+                        type="text" 
+                        class="delete-btn"
+                        @click="deleteComment(reply.id)"
+                      >
+                        删除
+                      </el-button>
+                    </div>
                   </div>
                   <div class="reply-content">{{ reply.content }}</div>
+                  
+                  <!-- 对子评论的回复输入框 -->
+                  <div v-if="replyingTo === reply.id" class="reply-form nested-reply">
+                    <div class="reply-target">回复 @{{ reply.username }}:</div>
+                    <el-input
+                      v-model="replyContent"
+                      type="textarea"
+                      :rows="2"
+                      placeholder="写下您的回复..."
+                      maxlength="500"
+                      show-word-limit
+                    />
+                    <div class="reply-actions">
+                      <el-button size="small" @click="cancelReply">取消</el-button>
+                      <el-button size="small" type="primary" @click="submitReply(comment.id)">
+                        发表回复
+                      </el-button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -108,7 +133,7 @@
           </div>
         </div>
       </el-card>
-      <div v-else class="no-data">您必须登录/注册才可以阅读文章</div>
+      <div v-else class="no-data">文章加载失败</div>
     </el-main>
   </el-container>
 </template>
@@ -140,8 +165,15 @@ const fetchArticle = async () => {
   try {
     const response = await axios.get<ArticleDTO>(`/articles/${id}`);
     article.value = response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to load article:", error);
+    if (error.response?.status === 404) {
+      ElMessage.error('文章不存在或已被删除');
+    } else if (error.response?.status === 401) {
+      ElMessage.error('请先登录后查看文章');
+    } else {
+      ElMessage.error('加载文章失败');
+    }
   }
 };
 
@@ -218,7 +250,7 @@ const formatDate = (dateString: string) => {
 // 回复相关方法
 const startReply = (comment: CommentDTO) => {
   replyingTo.value = comment.id;
-  replyContent.value = '';
+  replyContent.value = `@${comment.username} `;
 };
 
 const cancelReply = () => {
@@ -450,6 +482,24 @@ onMounted(() => {
   color: #333;
   line-height: 1.5;
   font-size: 0.9em;
+}
+
+.reply-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.nested-reply {
+  margin-top: 10px;
+  background-color: #f0f2f5;
+  border-radius: 6px;
+}
+
+.reply-target {
+  font-size: 14px;
+  color: #409eff;
+  margin-bottom: 10px;
+  font-weight: 500;
 }
 
 .no-comments {
