@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"context"
 	"log"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 )
 
 func main() {
+	fmt.Println("Hello, World!")
 	config.InitConfig()
 
 	// 数据库迁移：确保所有表结构在应用启动时就准备好

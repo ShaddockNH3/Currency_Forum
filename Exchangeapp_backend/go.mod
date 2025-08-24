@@ -13,7 +13,7 @@ require (
 	gorm.io/gorm v1.30.1
 )
 
-require github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
+require github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect

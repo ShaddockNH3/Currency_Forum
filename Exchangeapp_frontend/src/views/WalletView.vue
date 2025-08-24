@@ -13,7 +13,7 @@
         <template #header>
           <div class="card-header">
             <span>{{ wallet.wallet_name }}</span>
-            <el-button type="text" @click="editWalletVisible = true">编辑</el-button>
+            <el-button type="text" @click="startEditWallet">编辑</el-button>
           </div>
         </template>
         <div class="wallet-details">
@@ -195,6 +195,36 @@
           <el-button type="primary" @click="transfer">确认转账</el-button>
         </template>
       </el-dialog>
+
+      <!-- 编辑钱包对话框 -->
+      <el-dialog v-model="editWalletVisible" title="编辑钱包" width="500px">
+        <el-form :model="editWalletForm" label-width="120px">
+          <el-form-item label="钱包名称" required>
+            <el-input v-model="editWalletForm.wallet_name" placeholder="请输入钱包名称" />
+          </el-form-item>
+          <el-form-item label="钱包描述">
+            <el-input 
+              v-model="editWalletForm.wallet_description" 
+              type="textarea" 
+              :rows="3"
+              placeholder="请输入钱包描述" 
+            />
+          </el-form-item>
+          <el-form-item label="默认货币" required>
+            <el-select v-model="editWalletForm.default_currency" placeholder="选择默认货币">
+              <el-option label="人民币 (CNY)" value="CNY" />
+              <el-option label="美元 (USD)" value="USD" />
+              <el-option label="日元 (JPY)" value="JPY" />
+              <el-option label="欧元 (EUR)" value="EUR" />
+              <el-option label="英镑 (GBP)" value="GBP" />
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="cancelEditWallet">取消</el-button>
+          <el-button type="primary" @click="updateWallet">更新</el-button>
+        </template>
+      </el-dialog>
     </el-main>
   </el-container>
 </template>
@@ -227,6 +257,12 @@ const transferVisible = ref(false);
 
 // 表单数据
 const walletForm = ref<WalletInput>({
+  wallet_name: '',
+  wallet_description: '',
+  default_currency: 'CNY'
+});
+
+const editWalletForm = ref<WalletInput>({
   wallet_name: '',
   wallet_description: '',
   default_currency: 'CNY'
@@ -291,6 +327,49 @@ const fetchBills = async () => {
   } catch (error) {
     console.error('Failed to load bills:', error);
     ElMessage.error('加载交易记录失败');
+  }
+};
+
+// 开始编辑钱包
+const startEditWallet = () => {
+  if (!wallet.value) return;
+  
+  editWalletForm.value = {
+    wallet_name: wallet.value.wallet_name,
+    wallet_description: wallet.value.description || '',
+    default_currency: wallet.value.default_currency
+  };
+  editWalletVisible.value = true;
+};
+
+// 取消编辑钱包
+const cancelEditWallet = () => {
+  editWalletVisible.value = false;
+  editWalletForm.value = {
+    wallet_name: '',
+    wallet_description: '',
+    default_currency: 'CNY'
+  };
+};
+
+// 更新钱包
+const updateWallet = async () => {
+  try {
+    console.log('更新钱包请求数据:', editWalletForm.value);
+    const response = await axios.put('/wallets', editWalletForm.value);
+    console.log('钱包更新成功响应:', response.data);
+    editWalletVisible.value = false;
+    await fetchWallet();
+    ElMessage.success('钱包更新成功！');
+    // 重置表单
+    cancelEditWallet();
+  } catch (error: any) {
+    console.error('钱包更新失败:', error);
+    if (error.response?.data?.error) {
+      ElMessage.error(`钱包更新失败: ${error.response.data.error}`);
+    } else {
+      ElMessage.error('钱包更新失败');
+    }
   }
 };
 
@@ -533,6 +612,13 @@ onMounted(() => {
 }
 
 .input-tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+.form-tip {
   font-size: 12px;
   color: #999;
   margin-top: 5px;

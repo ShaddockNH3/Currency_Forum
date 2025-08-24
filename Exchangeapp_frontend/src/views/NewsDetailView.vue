@@ -104,7 +104,13 @@
                       </el-button>
                     </div>
                   </div>
-                  <div class="reply-content">{{ reply.content }}</div>
+                  <!-- 显示回复内容，如果是@回复则显示回复对象 -->
+                  <div class="reply-content">
+                    <span v-if="getReplyTarget(reply.content)" class="reply-mention">
+                      {{ getReplyTarget(reply.content) }}
+                    </span>
+                    {{ getReplyContentWithoutMention(reply.content) }}
+                  </div>
                   
                   <!-- 对子评论的回复输入框 -->
                   <div v-if="replyingTo === reply.id" class="reply-form nested-reply">
@@ -214,10 +220,15 @@ const fetchComments = async () => {
       repliesMap.get(reply.parent_id!)!.push(reply);
     });
     
-    // 为顶级评论添加回复
+    // 为顶级评论添加回复，并对回复按时间排序（最早的在前）
     topLevelComments.forEach(comment => {
-      comment.replies = repliesMap.get(comment.id) || [];
+      const replies = repliesMap.get(comment.id) || [];
+      replies.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      comment.replies = replies;
     });
+    
+    // 按时间排序顶级评论（最新的在前）
+    topLevelComments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     
     comments.value = topLevelComments;
   } catch (error) {
@@ -245,6 +256,17 @@ const submitComment = async () => {
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString('zh-CN');
+};
+
+// 提取回复中的@用户名
+const getReplyTarget = (content: string) => {
+  const match = content.match(/^@(\w+)\s/);
+  return match ? match[0] : null;
+};
+
+// 获取去除@用户名后的内容
+const getReplyContentWithoutMention = (content: string) => {
+  return content.replace(/^@\w+\s/, '');
 };
 
 // 回复相关方法
@@ -500,6 +522,12 @@ onMounted(() => {
   color: #409eff;
   margin-bottom: 10px;
   font-weight: 500;
+}
+
+.reply-mention {
+  color: #409eff;
+  font-weight: 500;
+  margin-right: 4px;
 }
 
 .no-comments {
